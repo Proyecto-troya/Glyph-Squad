@@ -14,6 +14,7 @@ Especificación para llevar a `app/src/ui/` los componentes que el [prototipo](p
 | [Piezas del SMS](#6-piezas-del-sms) | Enviar | `Enviar.ts` | No |
 | [Gravedad por parcela](#7-gravedad-por-parcela) | Técnico | `Tecnico.ts` | No |
 | [Resumen del resultado](#8-resumen-del-resultado) | Resultado | `Resultado.ts` | No |
+| [Marca, iconos y guías](#9-marca-iconos-y-guías-set-1b3) | Todas | `icons.ts`, `main.ts`, `Muestra.ts`, `Resultado.ts`, `index.html`, `public/` | No |
 
 **Regla para estados.** Los componentes nuevos marcan su estado con `data-state`, nunca con clases como `.done`, `.active` o `.warn`, que ya existen en la hoja con otro significado. En el prototipo, una clase `.done` en el visor lo rompía.
 
@@ -189,6 +190,63 @@ Una línea bajo el mapa en Resultado: cuántas hojas tienen señales y qué porc
 
 - **`Resultado.ts`:** con `sickCount` y `sickPct` de `sample.ts`.
 
+
+## 9. Marca, iconos y guías (set 1B3)
+
+El set entregado está en [`assets/`](assets/README.md). Así entra en la app:
+
+**Iconos de interfaz y de clase → `app/src/ui/icons.ts`.** Copiar el contenido de cada SVG (sin la etiqueta `<svg>`) en `PATHS`, con el nombre del archivo como clave: los 24 de `assets/iconos/ui/` y los 6 de `assets/iconos/clases/` (`"class-roya"`, …). La función `icon()` no cambia; la hoja ya aplica trazo, grosor y color con `.icon`. El prototipo genera su lista así desde los archivos, para que no haya diferencias:
+
+```python
+import re, glob, os, json
+for p in sorted(glob.glob("assets/iconos/ui/*.svg") + glob.glob("assets/iconos/clases/*.svg")):
+    inner = re.sub(r"^<svg[^>]*>|</svg>$", "", open(p).read().strip())
+    print(f"  {json.dumps(os.path.basename(p)[:-4])}: {json.dumps(inner)},")
+```
+
+**Icono de clase en lugar del punto de color.** En la cabecera de la última foto (`Muestra.ts`) y en las filas de conteo (`Resultado.ts`), cambiar `el("span", { class: "dot" })` por el icono de la clase:
+
+```ts
+const svg = icon(`class-${label}`);
+svg.setAttribute("class", "icon class-icon");   // toma el color de .tone-*
+```
+
+Así la clase se reconoce por la forma, no solo por el color. `.dot` sigue en la hoja por compatibilidad.
+
+**Marca en la barra superior (`main.ts`).** Cambiar `span.brand-mark` con el icono `leaf` por la marca en un color, como SVG en línea con `viewBox="0 0 64 64"`, clase `brand-logo` y el contenido de `assets/marca/logo-marca-mono.svg`. Toma el color del texto de la barra (blanco).
+
+**Marca a color en la portada (`Muestra.ts`, formulario).** Cambiar `div.hero` con el icono `leaf` por `<img class="brand-hero" src="logo-marca.svg" alt="">`, copiando `assets/marca/logo-marca.svg` a `app/public/`. El `.hero` sigue usándose en el estado vacío.
+
+**Indicador de IA local.** El `span.ai-status` lleva el icono `local-ai` delante del texto (ver [1](#1-indicador-de-ia-local)).
+
+**Guías ilustradas** (copiar los SVG de `assets/ilustraciones/` a `app/public/`):
+
+```html
+<!-- Formulario de parcela, después de ol.steps -->
+<figure class="guide">
+  <img src="muestreo-plantas.svg" alt="Diez plantas de la parcela y, en una, las ramas baja, media y alta">
+  <figcaption>10 plantas repartidas por la parcela. En cada una, una hoja de la rama baja, una de la media y una de la alta.</figcaption>
+</figure>
+
+<!-- Visor en estado retry, después del mensaje M07 -->
+<figure class="scan-guide">
+  <img src="guia-foto-correcta.svg" alt="Una hoja sola, centrada en un plato blanco, con buena luz">
+  <figcaption>Así: una hoja sola en el centro del plato, con luz pareja.</figcaption>
+</figure>
+```
+
+Las guías de foto borrosa, oscura y con dos hojas quedan disponibles para una pantalla de ayuda futura.
+
+**Iconos de la app instalada → `app/public/`.** Copiar los 8 archivos de `assets/app/` (no hacen falta los `.svg` fuente de los PNG, salvo `favicon.svg`) y borrar el `icon.svg` actual. En `app/index.html`:
+
+```html
+<meta name="theme-color" content="#133f27" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="favicon.ico" sizes="32x32" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+```
+
+En `app/public/manifest.webmanifest`, el bloque de iconos de [assets/README.md](assets/README.md#b-iconos-de-la-app-instalada--app-luego-van-a-apppublic) con rutas relativas (`icon-192.png`, sin `/app/`). El `manifest-ejemplo.json` del paquete usa rutas absolutas (`/app/…`) y `start_url: "/"`, que no sirven cuando la app se abre desde la laptop en otra ruta; conservar `start_url` y `scope` en `"./"` como hoy.
 ---
 
 ## Animaciones

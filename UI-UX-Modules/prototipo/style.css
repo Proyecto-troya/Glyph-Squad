@@ -837,6 +837,31 @@ nav a.active .icon { color: var(--forest); background: var(--mint); }
 .sev { display: inline-block; width: 54px; height: 6px; margin-left: 10px; vertical-align: middle; background: var(--paper); border-radius: var(--pill); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
 .sev-fill { display: block; height: 100%; background: var(--tone-roya); border-radius: inherit; }
 
+/* ---------- Marca, iconos de clase y guías (set 1B3, ver COMPONENTES.md) ---------- */
+
+/* Marca en un color en la barra superior (assets/marca/logo-marca-mono.svg). */
+.brand-logo { flex: none; width: 34px; height: 34px; color: var(--on-forest); }
+.brand:has(.brand-logo) { color: var(--on-forest); font-weight: 700; }
+/* Marca a color en la portada (assets/marca/logo-marca.svg): ya trae su plato. */
+.brand-hero { display: block; width: 92px; height: 92px; margin: 0 0 18px; filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.28)); }
+
+.ai-status .icon { width: 16px; height: 16px; stroke-width: 2; }
+
+/* Icono de clase: misma hoja, el síntoma cambia. Toma el color de su clase. */
+.class-icon { color: var(--tone, currentColor); }
+.count-row .class-icon { width: 24px; height: 24px; }
+.result-head .class-icon { width: 1.6em; height: 1.6em; color: #fff; }
+
+/* Guía de foto en "Repite la foto". */
+.scan-guide { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: center; margin: 14px 0 0; }
+.scan-guide img { display: block; width: 100%; border-radius: var(--radius-inner); }
+.scan-guide figcaption { color: var(--on-forest-muted); font-size: 0.86rem; line-height: 1.35; }
+
+/* Esquema de muestreo bajo los pasos del formulario. */
+.guide { margin: 8px 0 0; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.guide img { display: block; width: 100%; border-radius: var(--radius-inner); }
+.guide figcaption { margin-top: 10px; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
+
 /* ---------- Pantallas anchas ---------- */
 
 @media (min-width: 700px) {
