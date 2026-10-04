@@ -82,6 +82,25 @@ scripted streams, delays, failures) and `tests/helpers.py`.
   `find /Volumes/Expansion/repos/Glyph-Squad /Volumes/Expansion/repos/ollama-models -name '._*' -type f -delete`.
   The uv venv lives on the internal disk for the same reason (section 2).
 
+### Open items before the demo (as of 2026-10-04)
+
+Everything in this package is implemented, tested and pushed. What remains needs hardware
+or files outside this repository:
+
+1. Run the LAN checks from a **physically separate device** on the demo hotspot (all live
+   checks so far ran from the laptop to its own LAN IP).
+2. Wire the Enviar screen to `POST /api/sms` with the code-only SMS as default (app side),
+   then test it from a **real browser** so CORS and the token header are exercised end to end.
+3. Update **PLAN.md** (not in this repo): the SMS sentence is a deliberate exception to
+   "no free text generation" and "the classifier is the only AI".
+4. Set **`OLLAMA_CONTEXT_LENGTH`** for the translation prompts (currently unset; gemma4
+   loaded at 4096) and confirm with the `ps` action.
+5. For **wss** on the phone, install the self-signed certificate on the device or issue one
+   with `mkcert` (not installed on this laptop).
+6. Optional: if you want more model-written SMS sentences than the current ~3 of 5, try
+   `GATEWAY_SMS_MODEL=gemma4:e2b` or a larger `GATEWAY_SMS_NUM_PREDICT`; the fallback keeps
+   the technician covered either way.
+
 ---
 
 ## 1. Ollama server config (laptop)
