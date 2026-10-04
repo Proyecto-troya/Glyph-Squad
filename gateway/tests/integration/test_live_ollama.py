@@ -7,7 +7,8 @@ import pytest
 
 from tests.transport.wsclient import cancel, collect, connect, send
 
-pytestmark = pytest.mark.integration
+# Real models load and swap; a cold load of a 4-9 GB model can take minutes.
+pytestmark = [pytest.mark.integration, pytest.mark.timeout(900)]
 
 
 def test_version_and_gates(live_app: Any, ollama_version: str) -> None:
