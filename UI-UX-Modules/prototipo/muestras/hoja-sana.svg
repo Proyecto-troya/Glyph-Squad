@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Ilustración que hace de foto en el prototipo: hoja de café sana por el envés, sobre plato blanco, vista desde arriba. -->
+  <rect width="400" height="400" fill="#8f8577"/>
+  <rect width="400" height="400" fill="#6f6658" opacity=".35"/>
+  <circle cx="205" cy="200" r="178" fill="#00000022"/>
+  <circle cx="200" cy="196" r="176" fill="#f4f4f1"/>
+  <circle cx="200" cy="196" r="138" fill="none" stroke="#e2e2dc" stroke-width="3"/>
+  <path d="M108 300C92 206 150 116 306 100c14 124-42 212-160 222-16 1-28-8-38-22z" fill="#5f8a52"/>
+  <path d="M108 300C142 240 210 166 304 104" fill="none" stroke="#93b882" stroke-width="5" stroke-linecap="round"/>
+  <path d="M160 238c-6-26-4-48 6-70M194 206c-4-28 0-52 12-74M228 174c0-24 6-44 18-62M150 258c28 0 52-4 74-14M186 224c30 2 58-4 82-16M220 190c28 0 52-8 72-20" fill="none" stroke="#7fa56f" stroke-width="3" stroke-linecap="round"/>
+</svg>

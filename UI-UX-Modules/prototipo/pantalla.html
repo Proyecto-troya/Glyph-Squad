@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f6b3a" />
+    <title>Leaf Plate · pantalla</title>
+    <link rel="stylesheet" href="fuentes/fuentes.css" />
+    <link rel="stylesheet" href="style.css" id="hoja" />
+    <script>
+      // ?css=original carga la hoja actual de la app para comparar.
+      if (new URLSearchParams(location.search).get("css") === "original") document.getElementById("hoja").href = "original.css";
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="estados.js"></script>
+    <script>start();</script>
+  </body>
+</html>
