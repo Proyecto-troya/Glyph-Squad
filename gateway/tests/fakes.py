@@ -142,6 +142,7 @@ class FakeOllamaClient:
     version: str = "0.35.1"
     unavailable: bool = False
     chunk_delay_s: float = 0.0
+    call_delay_s: float = 0.0
     head_statuses: dict[str, int] = field(default_factory=dict)
     upload_status: int = 201
     calls: list[RecordedCall] = field(default_factory=list)
@@ -273,6 +274,8 @@ class FakeOllamaClient:
             raise UpstreamUnavailableError("connection refused")
         data = dict(body) if body is not None else None
         self.calls.append(RecordedCall(method, path, data))
+        if self.call_delay_s:
+            await asyncio.sleep(self.call_delay_s)
         responder = self._responses.get((method, path))
         return responder(data) if responder else self._default(method, path, data)
 

@@ -87,6 +87,15 @@ class Settings(BaseSettings):
     # Use case 2: keep a phrase only when the noul probability is above this.
     backtranslation_threshold: float = Field(default=0.8, ge=0, le=1)
 
+    # POST /api/sms: one validated Spanish sentence for the technician SMS.
+    sms_enabled: bool = True
+    sms_model: str = "llama3.2:3b"
+    sms_timeout_s: float = Field(default=10.0, gt=0)
+    sms_keep_alive: str = "30m"
+    sms_seed: int = 7
+    sms_num_predict: int = Field(default=80, ge=1)
+    sms_max_chars: int = Field(default=160, ge=70, le=160)
+
     @field_validator("allowed_origins", "enabled_actions", mode="before")
     @classmethod
     def _csv(cls, value: object) -> object:

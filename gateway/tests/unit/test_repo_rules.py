@@ -67,7 +67,11 @@ FORBIDDEN_IN_APP = [
 
 
 def test_phone_app_never_imports_or_dials_the_gateway() -> None:
-    """``app/src`` must not import ``gateway`` or open a socket to it. Vacuous until it exists."""
+    """``app/src`` must not import ``gateway`` or open a WebSocket to it. Vacuous until it exists.
+
+    The one sanctioned HTTP call is ``POST /api/sms`` (see the gateway README), which the app
+    must guard with its code-only fallback; it is not matched here.
+    """
     app_src = REPO / "app" / "src"
     if not app_src.exists():
         return

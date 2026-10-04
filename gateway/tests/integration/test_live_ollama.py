@@ -135,3 +135,33 @@ def test_warmup_and_unload(live_app: Any, chat_model: str) -> None:
         assert chat_model in running
         send(ws, "u", "unload", {"model": chat_model})
         assert collect(ws, "u")[0]["type"] == "result"
+
+
+def test_sms_sentence_live(live_app: Any, installed_models: dict[str, dict[str, Any]]) -> None:
+    from gateway.sms.models import SmsRequest
+    from gateway.sms.validate import validate_sentence
+
+    body = {
+        "plot": "P114",
+        "counts": {
+            "total": 30,
+            "sana": 20,
+            "roya": 7,
+            "minador": 0,
+            "cercospora": 1,
+            "phoma": 0,
+            "duda": 2,
+        },
+        "over15": True,
+        "flagUnsure": False,
+        "code": "LP P114 30H ROYA7 CER1 DUDA2 E15+",
+    }
+    response = live_app.post("/api/sms", json=body, headers={"X-Gateway-Token": "test-token"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["source"] in {"llm", "fallback"}
+    # Whatever the source, the sentence obeys every rule.
+    cleaned = validate_sentence(data["text"], SmsRequest.model_validate(body), 160)
+    assert cleaned == data["text"]
+    if "llama3.2:3b" not in installed_models:
+        assert data["source"] == "fallback"

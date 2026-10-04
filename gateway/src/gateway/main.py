@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from gateway import __version__
 from gateway.actions.base import ActionContext
@@ -15,9 +16,11 @@ from gateway.actions.registry import ActionRegistry, build_default_registry
 from gateway.config import Settings
 from gateway.ollama.cache import ModelInfoCache
 from gateway.ollama.client import OllamaClient
+from gateway.ollama.errors import translate
 from gateway.ollama.httpx_client import HttpxOllamaClient
 from gateway.ollama.version import VersionGate
-from gateway.protocol.errors import GatewayError
+from gateway.sms.route import router as sms_router
+from gateway.sms.service import SmsService
 from gateway.transport.runtime import Emit, GatewayRuntime
 from gateway.transport.ws import router as ws_router
 
@@ -46,6 +49,8 @@ def create_app(
             return await registry.execute(action, raw, ctx)
 
         app.state.runtime = GatewayRuntime(settings=settings, execute=execute)
+        if settings.sms_enabled:
+            app.state.sms_service = SmsService(upstream, cache, settings)
         await _probe_upstream(cache, settings)
         try:
             yield
@@ -62,6 +67,15 @@ def create_app(
         openapi_url=None,
     )
     app.include_router(ws_router)
+    app.include_router(sms_router)
+    if settings.allowed_origins:
+        # The phone app is a browser app on another origin; let it POST /api/sms.
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=sorted(settings.allowed_origins),
+            allow_methods=["POST"],
+            allow_headers=["Content-Type", "X-Gateway-Token"],
+        )
     return app
 
 
@@ -71,8 +85,11 @@ async def _probe_upstream(cache: ModelInfoCache, settings: Settings) -> None:
     log.info("enabled actions: %s", enabled)
     try:
         gate = VersionGate(await cache.version())
-    except GatewayError as exc:
-        log.warning("Ollama not reachable at startup (%s); will retry per request", exc.message)
+    except Exception as exc:  # a down upstream must never stop the gateway from starting
+        mapped = translate(exc)
+        if mapped is None:
+            raise
+        log.warning("Ollama not reachable at startup (%s); will retry per request", mapped.message)
         return
     log.info("Ollama %s at %s", gate.version, settings.ollama_url)
     if not gate.supports_systemone:

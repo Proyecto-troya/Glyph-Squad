@@ -25,8 +25,9 @@ Branch `feature/endpoint_ollama`. Everything below lives under `gateway/`.
 | `ollama/` | `client.py`, `httpx_client.py`, `ndjson.py`, `aggregate.py`, `errors.py`, `version.py`, `cache.py` | `OllamaClient` Protocol, httpx adapter (JSON, NDJSON streams, HEAD, streamed uploads), mid-stream error detection, chunk → result aggregation, HTTP status map, version gates, TTL cache for `/api/version`, `/api/show`, `/api/tags` |
 | `security/` | `auth.py`, `origin.py`, `limits.py`, `cloud_guard.py`, `routing.py` | Token via header or subprotocol, origin allowlist, text/image size caps, cloud-model guard from `/api/tags`, decision-model routing, `think` validation, systemone version and image gates |
 | `actions/` | `base.py`, `registry.py`, `_streaming.py`, `_models.py`, `_internet.py`, and one module per action | `generate`, `chat`, `load`, `unload`, `embed`, `systemone`, `list`, `ps`, `show`, `version`, `create`, `blob_exists`, `blob_upload`, `copy`, `delete`, `pull`, `push`, `ping` (18 actions) |
+| `sms/` | `models.py`, `validate.py`, `fallback.py`, `service.py`, `route.py` | `POST /api/sms`: strict request model, sentence validator (length, ASCII after accent stripping, numbers, banned words, shape), three-size fallback template, model call with timeout, token-checked route (section 5b) |
 | `transport/` | `ws.py`, `session.py`, `runtime.py` | `/ws` route, handshake checks, per-socket `Session` (concurrent ids, cancel, timeout, limits, request log), the `Executor` contract that keeps the transport Ollama-free |
-| root | `main.py`, `__main__.py` | `create_app(settings, client, registry)` composition root with startup version probe; `python -m gateway` runs uvicorn with TLS, `ws_max_size` and ping settings from env |
+| root | `main.py`, `__main__.py` | `create_app(settings, client, registry)` composition root with startup version probe, CORS for listed origins, `/ws` and `/api/sms` routers; `python -m gateway` runs uvicorn with TLS, `ws_max_size` and ping settings from env |
 
 ### Examples `examples/` (one per use case)
 
@@ -34,15 +35,15 @@ Branch `feature/endpoint_ollama`. Everything below lives under `gateway/`.
 `translation_draft.py`, `back_translation_check.py`, `similarity_signal.py`,
 `bulk_drafts.py`, `demo_warmup.py`, `ops_panel.py`. Section 5 describes each.
 
-### Tests `tests/` (201 collected)
+### Tests `tests/` (243 collected)
 
 | Suite | Count | Covers |
 |---|---|---|
-| `unit/` | 163 | Envelope validation; every payload model (think, images, systemone bounds, GGUF + `quantize`, digests); NDJSON, aggregators, error map incl. 503; version gates at 0.34.x / 0.35.0 / 0.35.1; cache TTL; httpx adapter via `MockTransport`; auth, origin, limits, cloud guard, routing; every action's request and response mapping incl. blob path traversal; settings; schema drift; repo rules (no hostnames, files under 500 lines, `app/src` never touches the gateway) |
-| `transport/` | 16 | TestClient WebSocket: auth failure (4401), subprotocol auth, origin (4403), envelope errors keep the id, unknown/disabled actions, streaming order with a single `result`, cancel mid-stream closes upstream, unknown-id cancel ignored, concurrent ids, duplicate id, concurrency cap, timeout, mid-stream error line, upstream down, cloud model rejected, oversize and image size limits, tool-loop round trip with `thinking` and `tool_name` |
+| `unit/` | 198 | Envelope validation; every payload model (think, images, systemone bounds, GGUF + `quantize`, digests); NDJSON, aggregators, error map incl. 503; version gates at 0.34.x / 0.35.0 / 0.35.1; cache TTL; httpx adapter via `MockTransport`; auth, origin, limits, cloud guard, routing; every action's request and response mapping incl. blob path traversal; settings; schema drift; the SMS request model, every SMS validation rule, fallback sizes and service paths; repo rules (no hostnames, files under 500 lines, `app/src` never touches the gateway) |
+| `transport/` | 22 | TestClient WebSocket: auth failure (4401), subprotocol auth, origin (4403), envelope errors keep the id, unknown/disabled actions, streaming order with a single `result`, cancel mid-stream closes upstream, unknown-id cancel ignored, concurrent ids, duplicate id, concurrency cap, timeout, mid-stream error line, upstream down, cloud model rejected, oversize and image size limits, tool-loop round trip with `thinking` and `tool_name`; `POST /api/sms` auth before body, 422, fallback, CORS preflight, disabled |
 | `contract/` | 4 | Every `operationId` in `docs/openapi.yaml` is registered or in the explicit out-of-scope list; the registry claims nothing the spec lacks |
 | `examples/` | 9 | Each example against the fake Ollama through the real transport, plus interleaved ids and cancel in the client |
-| `integration/` | 9 | Real Ollama at `127.0.0.1:11434` (marker `integration`, skips when unreachable): version, list/ps, chat stream + cancel, structured drafts, unit-length embeddings, cloud model blocked, decision model rejected for chat, systemone choice probabilities, warm-up/unload |
+| `integration/` | 10 | Real Ollama at `127.0.0.1:11434` (marker `integration`, skips when unreachable): version, list/ps, chat stream + cancel, structured drafts, unit-length embeddings, cloud model blocked, decision model rejected for chat, systemone choice probabilities, warm-up/unload, `/api/sms` live sentence |
 
 Shared fixtures: `tests/fakes.py` (programmable `FakeOllamaClient` with canned answers,
 scripted streams, delays, failures) and `tests/helpers.py`.
@@ -61,10 +62,10 @@ scripted streams, delays, failures) and `tests/helpers.py`.
   `OLLAMA_MODELS=/Volumes/Expansion/repos/ollama-models`, plus `~/.ollama/server.json`
   with `disable_ollama_cloud: true`. Log line confirmed: `Ollama cloud disabled: true`.
 - Models installed: `gemma4:e2b` (chat, 4.6 GB), `embeddinggemma` (0.6 GB), `nimble`
-  (decision, 9.5 GB).
+  (decision, 9.5 GB), `llama3.2:3b` (SMS sentence, 2.0 GB).
 - Tool versions: Python 3.13.7, uv 0.7.19, FastAPI 0.142, Starlette 1.7, Pydantic 2.13,
   httpx 0.28, uvicorn 0.54, websockets 17.2.
-- Gate at head: 201 tests collected, 192 pass offline against the fake and 9 pass live
+- Gate at head: 243 tests collected, 233 pass offline against the fake and 10 pass live
   against Ollama; `mypy --strict`, `ruff check` and `ruff format --check` clean.
 
 ### Known behaviours found during verification
@@ -410,6 +411,103 @@ Run with `uv run python -m examples.translation_draft "..."` from `gateway/`.
 
 Never use an LLM or vision model to label golden-set or evidence photos. Labels come
 from people.
+
+---
+
+## 5b. `POST /api/sms`: one sentence for the technician SMS
+
+Added from a teammate's spec. The app builds the deterministic code line itself
+(`LP P114 30H ROYA7 CER1 DUDA2 E15+`); this endpoint returns **one** extra Spanish line.
+The text is validated on the server before anyone sees it, so it is a plain HTTP call
+rather than the `/ws` token stream. It is served by the same process and port as `/ws`
+(set `GATEWAY_PORT=8000` to match the spec's diagram).
+
+**Owner's note.** This is the one place the phone app talks to the laptop. It breaks two
+rules of the original plan ("no free text generation", "the vision classifier is the only
+AI"), so the plan and the root README carry an explicit exception. The app must keep the
+code-only SMS as its default and use this sentence only when the laptop answers in time.
+
+```
+LP P114 30H ROYA7 CER1 DUDA2 E15+
+Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de mas de 15 anos.
+```
+
+### Request
+
+`POST /api/sms` with header `X-Gateway-Token: <token>` (same token as `/ws`).
+
+| Field | Type | Rule |
+|---|---|---|
+| `plot` | string | `[A-Z0-9]{1,8}`; no names or phone numbers are ever sent |
+| `counts` | object | integers `total, sana, roya, minador, cercospora, phoma, duda`; `total` ≤ 30 and equal to the sum of the others |
+| `over15` | boolean | plants older than 15 years |
+| `flagUnsure` | boolean | `duda` above 20 % of `total` (computed by the app) |
+| `code` | string | the app's code line, starts with `LP `, single line, contains `plot` |
+
+Bad bodies return 422; a missing or wrong token returns 401.
+
+### Response
+
+```json
+{"text": "Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de mas de 15 anos.",
+ "source": "llm", "reason": null}
+```
+
+`source` is `llm` or `fallback`. `reason` says why the fallback was used (`timeout`,
+`validation:<rule>`, `upstream:<ERROR_CODE>`, `internal`); it is `null` for `llm`.
+The endpoint answers 200 with a sentence whenever the body is valid, even with Ollama down.
+
+### Ollama call
+
+`POST /api/chat` with `model` `llama3.2:3b` (`GATEWAY_SMS_MODEL`), `stream: false`, `format`
+`{"type":"object","properties":{"text":{"type":"string"}},"required":["text"]}`,
+`options.temperature 0`, `options.seed 7`, `options.num_predict 80`, `keep_alive "30m"`,
+and a 10 s timeout (`GATEWAY_SMS_TIMEOUT_S`). The model goes through the same cloud guard
+as every other action. The system prompt states the rules: one Spanish sentence for the
+cooperative's technician, only the request's numbers, "senales de" rather than a
+diagnosis, never doses, products, treatments, yield or prices.
+
+### Validation (reject and fall back if any check fails)
+
+| Rule | Check |
+|---|---|
+| `length` | `code` + newline + `text` is at most 160 characters (`GATEWAY_SMS_MAX_CHARS`) |
+| `characters` | accents are stripped (`más` → `mas`, `años` → `anos`), then only printable ASCII may remain; `¿`, `¡` and emoji fail |
+| `numbers` | every number in the text is a count, a digit group of the plot, or 15 when `over15`; the total and every non-zero problem count must appear (`sana` may be omitted) |
+| `banned_word` | dosis, fungicida, aplicar, tratamiento, rendimiento, precio, kg, litro, including plurals |
+| `shape` | a single line that does not contain `LP ` |
+| `json` | the model answer was not `{"text": ...}` |
+
+### Fallback
+
+A fixed template built from the same fields, in three sizes so it always fits the budget:
+full (`Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de mas de
+15 anos.`), compact (`P114: roya 7, cercospora 1, duda 2 de 30 hojas. Mas de 15 anos.`),
+minimal (`P114: roya 7, cercospora 1, duda 2 de 30.`). The fallback passes the same
+validator as the model text.
+
+### Browser clients
+
+The phone app is a browser app on another origin. List it in `GATEWAY_ALLOWED_ORIGINS`;
+the gateway then answers CORS preflights for `POST /api/sms` with the `X-Gateway-Token`
+and `Content-Type` headers.
+
+### Observed with `llama3.2:3b` (2026-10-04)
+
+The prompt lists the facts, the mandatory numbers and the character budget, with one
+example. On five hand-made cases the model's sentence passed validation in three; the
+other two (five problem types at once, and a case where it paraphrased a count as
+"muchas dudas") failed on `length` and `numbers` and were served by the fallback. A
+typical answer takes 0.7 to 1.5 s with the model loaded. `reason` in the response and the
+`gateway.sms` log line say which path was taken.
+
+### Tests
+
+`tests/unit/test_sms.py` (request model, every validation rule, fallback sizes, service
+paths: model sentence accepted, banned word, bad JSON, cloud model, timeout, upstream down,
+HTTP errors, the exact Ollama parameters), `tests/transport/test_sms_route.py` (200 with
+the model sentence, fallback with Ollama down, 401, 422, CORS preflight, disabled
+endpoint) and `test_sms_sentence_live` in the integration suite.
 
 ---
 
