@@ -389,9 +389,12 @@ newer page wins. Gaps the models account for:
   runtime downloads. FastAPI's docs pages are disabled so nothing loads from a CDN.
 - `uv sync --frozen` before going offline; the lockfile pins every dependency.
 - `pull`/`push` are the only actions that leave the laptop; both are off by default.
-- Verified end to end on a LAN with no internet: a second device connects by IP, lists
-  models, streams a chat and cancels it; requesting a cloud model returns
-  `CLOUD_MODEL_BLOCKED`.
+- Verified on 2026-10-03 against Ollama 0.35.1 over the laptop's LAN IP (not loopback):
+  connect by IP with header and subprotocol auth, wrong token closes 4401, `list`, a
+  streamed `chat` cancelled mid-stream, `load`/`unload`, `embed`, structured-output
+  drafts, and cloud models (`gpt-oss:120b-cloud`, `gemma4:31b-cloud`) answered with
+  `CLOUD_MODEL_BLOCKED`. Repeat the same checks from a second device on the demo hotspot
+  before the demo; only the network path differs.
 
 ---
 
