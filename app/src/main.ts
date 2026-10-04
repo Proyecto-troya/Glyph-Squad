@@ -12,16 +12,26 @@ import { renderMuestra } from "./ui/Muestra";
 import { renderResultado } from "./ui/Resultado";
 import { renderTecnico } from "./ui/Tecnico";
 
-const ROUTES: Record<Route, { name: TextKey; icon: IconName }> = {
+/** La lista del técnico es una vista aparte (#/tecnico), con su propio marco y sin estas pestañas. */
+const TECH_ROUTE = "tecnico";
+
+/** Pestañas de la caficultora. */
+const TABS: Record<Exclude<Route, typeof TECH_ROUTE>, { name: TextKey; icon: IconName }> = {
   muestra: { name: "tabSample", icon: "leaf" },
   resultado: { name: "tabResult", icon: "chart" },
   enviar: { name: "tabSend", icon: "send" },
-  tecnico: { name: "tabTech", icon: "list" },
 };
 
 function currentRoute(): Route {
   const route = location.hash.replace("#/", "");
-  return route in ROUTES ? (route as Route) : "muestra";
+  return route === TECH_ROUTE || route in TABS ? (route as Route) : "muestra";
+}
+
+/** Paso de una vista a la otra: de las pestañas a la lista del técnico y de vuelta. */
+function viewLink(app: App, tech: boolean): HTMLElement {
+  return tech
+    ? el("a", { class: "view-link", href: "#/muestra" }, icon("leaf"), app.t("emptyGo"))
+    : el("a", { class: "view-link", href: `#/${TECH_ROUTE}` }, icon("technician"), app.t("viewTech"));
 }
 
 /** Botón de idioma, bajo la barra superior: un toque por idioma, con el actual marcado. */
@@ -79,6 +89,7 @@ async function start(): Promise<void> {
       stopAudio();
       document.documentElement.lang = LANG_INFO[app.lang].html;
       const route = currentRoute();
+      const tech = route === TECH_ROUTE;
       const main = el("main", {});
       if (route === "muestra") renderMuestra(main, app);
       else if (route === "resultado") renderResultado(main, app);
@@ -91,22 +102,29 @@ async function start(): Promise<void> {
         "header",
         { class: "appbar" },
         el("span", { class: "brand" }, brandLogo(), "Leaf Plate"),
-        // Con el clasificador de mentira ya avisa la franja de demostración.
-        classifier.kind === "onnx" && el("span", { class: "ai-status" }, icon("local-ai"), app.t("aiLocal")),
+        // Con el clasificador de mentira ya avisa la franja de demostración. La lista del técnico no usa IA.
+        !tech && classifier.kind === "onnx" && el("span", { class: "ai-status" }, icon("local-ai"), app.t("aiLocal")),
       );
       // En su propia fila: en la barra, junto a la marca y al indicador de IA, no cabe a ancho de teléfono.
-      const langRow = el("div", { class: "lang-row" }, languageSwitch(app));
-      const nav = el("nav", {});
-      for (const [key, tab] of Object.entries(ROUTES)) {
-        const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), app.t(tab.name));
-        if (key === route) link.setAttribute("aria-current", "page");
-        nav.append(link);
-      }
+      const langRow = el("div", { class: "lang-row" }, viewLink(app, tech), languageSwitch(app));
 
       const banners: HTMLElement[] = [];
       // El quechua de la interfaz no lo ha revisado nadie que lo hable: se avisa siempre.
       if (app.lang === "quz") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("quzNotice")));
       if (classifier.kind === "fake") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("demoBanner")));
+
+      // La vista del técnico va sin pestañas y, en una laptop, a todo el ancho de la tabla.
+      root.classList.toggle("tech-view", tech);
+      if (tech) {
+        root.replaceChildren(header, langRow, ...banners, main);
+        return;
+      }
+      const nav = el("nav", {});
+      for (const [key, tab] of Object.entries(TABS)) {
+        const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), app.t(tab.name));
+        if (key === route) link.setAttribute("aria-current", "page");
+        nav.append(link);
+      }
       root.replaceChildren(header, langRow, ...banners, main, nav);
     },
   };

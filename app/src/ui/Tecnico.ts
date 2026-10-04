@@ -20,7 +20,7 @@ export function renderTecnico(root: HTMLElement, app: App): void {
   const output = el("div", {});
 
   const refresh = () => {
-    // Se guarda lo pegado para no perderlo al cambiar de idioma o de pestaña.
+    // Se guarda lo pegado para no perderlo al cambiar de idioma o de vista.
     app.techText = text.value;
     output.replaceChildren();
     const { payloads, invalid } = parseCodes(text.value);

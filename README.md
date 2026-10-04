@@ -110,9 +110,10 @@ Plot P114, 30 leaves, 7 with rust, 1 with cercospora, 2 the model was not sure a
 over 15 years old. Classes with a count of zero are left out. Like any SMS it shows the
 sender's number, and the cooperative can link the plot code to its member.
 
-The four screens are **Muestra** (sample), **Resultado** (result), **Enviar** (send) and
-**Técnico** (the technician's list, which sorts pasted codes by the share of leaves with signs
-and flags old plants and samples with many doubts).
+The four screens are **Muestra** (sample), **Resultado** (result) and **Enviar** (send), which
+are the farmer's tabs, and **Técnico**, a separate view of the same app at `#/tecnico` (the
+technician's list, which sorts pasted codes by the share of leaves with signs and flags old
+plants and samples with many doubts). A link under the top bar switches between the two.
 
 ## What the AI does, and what it does not
 

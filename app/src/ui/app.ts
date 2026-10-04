@@ -28,7 +28,7 @@ export interface App {
   serviceUrl: string;
   /** Frase del LLM ya recibida para un código, para no pedirla en cada repintado. */
   sentence: { code: string; text: string | null } | null;
-  /** Códigos pegados en la lista del técnico: se conservan al cambiar de idioma o de pestaña. */
+  /** Códigos pegados en la lista del técnico: se conservan al cambiar de idioma o de vista. */
   techText: string;
   catalog: MessageCatalog;
   classifier: Classifier;

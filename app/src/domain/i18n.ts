@@ -25,7 +25,7 @@ const es = {
   tabSample: "Muestra",
   tabResult: "Resultado",
   tabSend: "Enviar",
-  tabTech: "Técnico",
+  viewTech: "Técnico",
 
   labelSana: "Sana",
   labelRoya: "Roya",
@@ -146,7 +146,7 @@ const en: Record<TextKey, string> = {
   tabSample: "Sample",
   tabResult: "Result",
   tabSend: "Send",
-  tabTech: "Technician",
+  viewTech: "Technician",
 
   labelSana: "Healthy",
   labelRoya: "Rust",
@@ -268,7 +268,7 @@ const quz: Record<TextKey, string> = {
   tabSample: "Muestra",
   tabResult: "Tarisqa",
   tabSend: "Apachiy",
-  tabTech: "Técnico",
+  viewTech: "Técnico",
 
   labelSana: "Qhali",
   labelRoya: "Roya",

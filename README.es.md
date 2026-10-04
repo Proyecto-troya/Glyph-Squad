@@ -113,9 +113,10 @@ Parcela P114, 30 hojas, 7 con roya, 1 con cercospora, 2 en las que el modelo dud
 más de 15 años. Las clases con conteo cero se omiten. Como todo SMS, muestra el número de
 quien lo envía, y la cooperativa puede vincular el código de parcela con su socia.
 
-Las cuatro pantallas son **Muestra**, **Resultado**, **Enviar** y **Técnico** (la lista del
+Las cuatro pantallas son **Muestra**, **Resultado** y **Enviar**, que son las pestañas de la
+caficultora, y **Técnico**, una vista aparte de la misma app en `#/tecnico` (la lista del
 técnico, que ordena los códigos pegados por porcentaje de hojas con señales y avisa de plantas
-viejas y de muestras con muchas dudas).
+viejas y de muestras con muchas dudas). Un enlace bajo la barra superior pasa de una a otra.
 
 ## Qué hace la IA y qué no
 
