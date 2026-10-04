@@ -9,7 +9,6 @@
     "preview": "vite preview --host",
     "test": "vitest run",
     "size": "node scripts/size.mjs",
-    "assets:sync": "node scripts/sync-design-assets.mjs",
     "secrets:check": "node scripts/twilio-check.mjs",
     "secrets:push": "node scripts/vercel-env.mjs"
   },

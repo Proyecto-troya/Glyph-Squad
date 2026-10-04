@@ -18,7 +18,6 @@
   <a href="docs/pitch.html">Presentación</a> ·
   <a href="PLAN.md">Plan de construcción</a> ·
   <a href="DATOS.md">Ficha de datos</a> ·
-  <a href="UI-UX-Modules/README.md">Diseño</a> ·
   <a href="README.md">English version</a>
 </p>
 
@@ -207,8 +206,8 @@ selector de archivos de la cámara nativa, que funciona también sin HTTPS.
 La interfaz empieza en español; el botón ES / QU / EN bajo la barra superior la cambia a
 quechua o inglés. El texto en quechua es una traducción automática que ningún hablante ha
 validado, y la app lo dice en pantalla. El aspecto y los componentes (visor de análisis, mapa
-de la muestra, medidor de confianza, piezas del código SMS) siguen el diseño de
-[UI-UX-Modules](UI-UX-Modules/README.md).
+de la muestra, medidor de confianza, piezas del código SMS) siguen el diseño, la marca y el
+juego de iconos del propio equipo.
 
 ### Modelo (`ml/`)
 
@@ -258,7 +257,6 @@ propio teléfono y es el único camino que funciona sin datos.
 ├─ api/            funciones de Vercel: enviar el SMS, frase opcional para el técnico
 ├─ ml/             manifiesto, entrenamiento, calibración, exportación ONNX, evaluación, audio
 ├─ tests/          pruebas unitarias y conjunto dorado de fotos propias
-├─ UI-UX-Modules/  dirección de diseño, componentes, marca, iconos y prototipo
 ├─ docs/           imágenes de este README y la presentación
 ├─ PLAN.md         plan de construcción
 └─ DATOS.md        ficha de datos

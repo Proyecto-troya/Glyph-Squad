@@ -19,7 +19,7 @@
   <g transform="translate(872 192) scale(0.5) rotate(5 45 100)"><use href="#leaf"/><use href="#rust"/></g>
   <g transform="translate(938 192) scale(0.5) rotate(-4 45 100)"><use href="#leaf"/></g>
   <g transform="translate(1004 192) scale(0.5) rotate(3 45 100)"><use href="#leaf"/></g>
-  <!-- Team logo mark (UI-UX-Modules/assets/marca), inverse version -->
+  <!-- Team logo mark (app/public/logo-marca.svg), inverse version -->
   <g transform="translate(60 44) scale(0.9)">
     <path d="M32 4a28 28 0 1 1 0 56a28 28 0 1 1 0 -56ZM32 6.5a25.5 25.5 0 1 1 0 51a25.5 25.5 0 1 1 0 -51ZM32 9a23 23 0 1 1 0 46a23 23 0 1 1 0 -46ZM32 10a22 22 0 1 1 0 44a22 22 0 1 1 0 -44Z" fill="#ffffff" fill-rule="evenodd"/>
     <path d="M30.7 4H33.3V9H30.7ZM30.7 55H33.3V60H30.7ZM4 30.7H9V33.3H4ZM55 30.7H60V33.3H55Z" fill="#ffffff"/>

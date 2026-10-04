@@ -6,11 +6,10 @@
 @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); }
 
 /*
-  Leaf Plate · hoja de estilos de la app. Es la propuesta de UI-UX-Modules, versión 3
-  (UI-UX-Modules/prototipo/style.css; las decisiones están en UI-UX-Modules/DISENO.md), más lo
-  que la app tiene y el prototipo no: las tipografías de arriba, el botón de idioma y los
-  estados del envío. El markup de la sección "Componentes nuevos" está descrito en
-  UI-UX-Modules/COMPONENTES.md.
+  Leaf Plate · hoja de estilos de la app. Es la propuesta de diseño del equipo, versión 3, más
+  lo que la app tiene y el prototipo no: las tipografías de arriba, el botón de idioma y los
+  estados del envío. El prototipo y los documentos de diseño estaban en la carpeta
+  UI-UX-Modules, que ya no está en el repositorio: quedan en el historial de git.
 
   Escena: un patio en Santa Teresa, un sábado de día, el smartphone de la hija con el
   brillo bajo y el sol encima. Por eso: tema claro en el contenido, texto grande,

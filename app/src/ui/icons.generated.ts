@@ -1,4 +1,5 @@
-// Generado por scripts/sync-design-assets.mjs desde UI-UX-Modules/assets: no editar a mano.
+// Trazos del set 1B3 del equipo. Se generaron desde los SVG de la carpeta de diseño, que ya no
+// está en el repositorio: ahora este archivo es la fuente.
 
 /** Contenido de cada icono (viewBox 0 0 24 24). Trazo, grosor y color los pone la clase .icon. */
 export const PATHS = {

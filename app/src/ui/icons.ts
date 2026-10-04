@@ -1,5 +1,5 @@
-// Iconos y marca del set 1B3 del equipo (UI-UX-Modules/assets), dibujados en el propio código:
-// no dependen de la red ni de los emojis del teléfono. Su contenido se regenera con `npm run assets:sync`.
+// Iconos y marca del set 1B3 del equipo, dibujados en el propio código:
+// no dependen de la red ni de los emojis del teléfono.
 
 import { LeafLabel } from "../domain/sample";
 import { BRAND_MONO, PATHS } from "./icons.generated";

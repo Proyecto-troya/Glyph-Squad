@@ -18,7 +18,6 @@
   <a href="docs/pitch.html">Pitch deck</a> ·
   <a href="PLAN.md">Build plan</a> ·
   <a href="DATOS.md">Data sheet</a> ·
-  <a href="UI-UX-Modules/README.md">Design</a> ·
   <a href="README.es.md">Versión en español</a>
 </p>
 
@@ -205,7 +204,7 @@ the native camera file picker, which also works without HTTPS.
 The interface starts in Spanish; the ES / QU / EN button under the top bar switches it to
 Quechua or English. The Quechua text is a machine translation that no speaker has validated,
 and the app says so on screen. The look and the components (analysis viewer, sample map,
-confidence meter, SMS code parts) follow the design in [UI-UX-Modules](UI-UX-Modules/README.md).
+confidence meter, SMS code parts) follow the team's own design, brand and icon set.
 
 ### Model (`ml/`)
 
@@ -292,7 +291,6 @@ rules, the tests (244) and the live checks are in [gateway/README.md](gateway/RE
 ├─ gateway/        laptop-only FastAPI + Ollama gateway: /ws for the team's tools, /api/sms offline
 ├─ ml/             manifest, training, calibration, ONNX export, evaluation, audio rendering
 ├─ tests/          unit tests and the golden set of our own photos
-├─ UI-UX-Modules/  design direction, components, brand, icons and prototype
 ├─ docs/           images for this README and the pitch deck
 ├─ PLAN.md         build plan (in Spanish)
 └─ DATOS.md        data sheet (in Spanish)
