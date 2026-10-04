@@ -55,4 +55,6 @@ export const storage = {
   saveTechNumber: (value: string) => safe(() => set("techNumber", value), undefined),
   loadServiceUrl: () => safe(async () => (await get<string>("serviceUrl")) ?? "", ""),
   saveServiceUrl: (value: string) => safe(() => set("serviceUrl", value), undefined),
+  loadLang: () => safe(async () => (await get<string>("lang")) ?? "", ""),
+  saveLang: (value: string) => safe(() => set("lang", value), undefined),
 };

@@ -9,16 +9,16 @@ import { icon } from "./icons";
 export function renderEnviar(root: HTMLElement, app: App): void {
   const sample = app.sample;
   if (!sample || sample.leaves.length === 0) {
-    root.append(emptyState("Enviar", "send", () => app.go("muestra")));
+    root.append(emptyState(app.t("tabSend"), "send", app));
     return;
   }
   const request = buildSmsRequest(sample.plot, countLeaves(sample.leaves), sample.over15);
   const code = request.code;
-  // El código lo arma siempre la app; el LLM solo añade una frase debajo.
+  // El código lo arma siempre la app y es igual en todos los idiomas; el LLM solo añade una frase debajo.
   let sms = code;
 
   // La app no envía nada: solo abre la app de SMS con el texto listo y ella pulsa enviar.
-  const link = el("a", { class: SMS_SEND_ENABLED ? "button big" : "button primary big" }, icon("message"), "Abrir SMS para el técnico");
+  const link = el("a", { class: SMS_SEND_ENABLED ? "button big" : "button primary big" }, icon("message"), app.t("openSms"));
   const codeBox = el("p", { class: "code" }, code);
   const sentenceBox = el("p", { class: "sentence" });
   const sentenceLabel = el("p", { class: "hint" });
@@ -30,15 +30,13 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     sms = composeSms(code, text);
     const used = sms !== code;
     sentenceBox.textContent = used ? sms.slice(code.length + 1) : "";
-    sentenceLabel.textContent = used
-      ? "Frase redactada por IA en la laptop. Léela antes de enviar."
-      : "Sin frase de la laptop: el mensaje lleva solo el código.";
+    sentenceLabel.textContent = app.t(used ? "sentenceAi" : "sentenceNone");
     setLink();
   };
 
   const askSentence = async () => {
     sentenceBox.textContent = "";
-    sentenceLabel.textContent = "Pidiendo la frase a la laptop…";
+    sentenceLabel.textContent = app.t("sentenceAsking");
     const response = await requestSentence(app.serviceUrl, request);
     app.sentence = { code, text: response?.text ?? null };
     // Si mientras tanto cambió la pantalla, estos nodos ya no están a la vista y no pasa nada.
@@ -51,7 +49,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     else void askSentence();
   }
 
-  const number = el("input", { type: "tel", value: app.techNumber, placeholder: "Número del técnico" });
+  const number = el("input", { type: "tel", value: app.techNumber, placeholder: app.t("techNumberPlaceholder") });
   number.oninput = () => {
     app.techNumber = number.value;
     void storage.saveTechNumber(number.value);
@@ -64,20 +62,20 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     void storage.saveServiceUrl(server.value);
     void askSentence();
   };
-  const retry = el("button", { type: "button" }, icon("refresh"), "Pedir la frase otra vez");
+  const retry = el("button", { type: "button" }, icon("refresh"), app.t("sentenceRetry"));
   retry.onclick = () => void askSentence();
 
-  const copy = el("button", { type: "button" }, icon("copy"), "Copiar mensaje");
+  const copy = el("button", { type: "button" }, icon("copy"), app.t("copy"));
   copy.onclick = async () => {
     try {
       await navigator.clipboard.writeText(sms);
-      copy.textContent = "Copiado";
+      copy.textContent = app.t("copied");
     } catch {
-      copy.textContent = "Cópialo a mano";
+      copy.textContent = app.t("copyManually");
     }
   };
 
-  const restart = el("button", { type: "button" }, icon("plus"), "Empezar otra parcela");
+  const restart = el("button", { type: "button" }, icon("plus"), app.t("restart"));
   restart.onclick = async () => {
     await storage.archive(sample);
     app.last = null;
@@ -88,35 +86,32 @@ export function renderEnviar(root: HTMLElement, app: App): void {
 
   // Envío por el servidor; el enlace sms: queda como respaldo sin conexión.
   const sendStatus = el("p", { class: "status" });
-  const sendButton = el("button", { class: "primary big", type: "button" }, icon("send"), "Enviar al técnico");
+  const sendButton = el("button", { class: "primary big", type: "button" }, icon("send"), app.t("sendToTech"));
   sendButton.onclick = async () => {
     sendButton.disabled = true;
-    sendStatus.textContent = "Enviando…";
+    sendStatus.textContent = app.t("sending");
     const status = await sendSms(app.serviceUrl, code, sms === code ? null : sms.slice(code.length + 1));
     sendButton.disabled = status === "queued";
-    sendStatus.textContent =
-      status === "queued"
-        ? "Mensaje en camino al técnico."
-        : status === "simulated"
-          ? "Demostración: el servidor recibió el mensaje, pero no tiene servicio de SMS y no envió nada."
-          : "No se pudo enviar por el servidor. Usa el botón de SMS del teléfono.";
+    sendStatus.textContent = app.t(
+      status === "queued" ? "sendQueued" : status === "simulated" ? "sendSimulated" : "sendFailed",
+    );
   };
 
   root.append(
-    el("h1", {}, "Mensaje para el técnico"),
-    messageCard({ id: "M08" }, app.catalog),
+    el("h1", {}, app.t("sendTitle")),
+    messageCard({ id: "M08" }, app),
     el(
       "section",
       { class: "card" },
-      el("h2", {}, "Tu mensaje"),
+      el("h2", {}, app.t("yourMessage")),
       codeBox,
       sentenceBox,
       sentenceLabel,
-      el("p", { class: "hint" }, "El mensaje lleva solo el código de parcela y los conteos. Las fotos no salen del teléfono."),
+      el("p", { class: "hint" }, app.t("privacyHint")),
     ),
     SMS_SEND_ENABLED ? sendButton : "",
     SMS_SEND_ENABLED ? sendStatus : "",
-    el("label", {}, "Número del técnico (para el SMS desde este teléfono)", number),
+    el("label", {}, app.t("techNumberLabel"), number),
     link,
     el("div", { class: "row" }, copy, restart),
   );
@@ -125,8 +120,8 @@ export function renderEnviar(root: HTMLElement, app: App): void {
       el(
         "details",
         {},
-        el("summary", {}, "Laptop que redacta la frase"),
-        el("label", {}, "Dirección del servidor (vacío = el mismo que sirve la app)", server),
+        el("summary", {}, app.t("laptopSummary")),
+        el("label", {}, app.t("serverLabel"), server),
         retry,
       ),
     );

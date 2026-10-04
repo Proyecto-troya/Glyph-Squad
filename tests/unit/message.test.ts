@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import catalogJson from "../../app/public/data/messages.json";
+import { LANGS } from "../../app/src/domain/i18n";
 import {
   audioClips,
   chooseMessages,
@@ -45,23 +46,32 @@ describe("elección de mensaje", () => {
 describe("catálogo de mensajes fijos", () => {
   const all: MessageId[] = ["M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08"];
 
-  it("tiene los 8 mensajes en español y quechua, con el rótulo del quechua", () => {
+  it("tiene los 8 mensajes en español, quechua e inglés, con el rótulo del quechua", () => {
     for (const id of all) {
-      expect(catalog.messages[id].es).toBeTruthy();
-      expect(catalog.messages[id].quz).toBeTruthy();
+      for (const lang of LANGS) expect(catalog.messages[id][lang], `${id}.${lang}`).toBeTruthy();
     }
-    expect(catalog.quzLabel).toMatch(/sin validar/);
+    expect(catalog.quzLabel.es).toMatch(/sin validar/);
+    expect(catalog.quzLabel.en).toMatch(/not validated/);
+    expect(catalog.quzLabel.quz).toBeTruthy();
   });
 
-  it("rellena {n} y {total} en los dos idiomas", () => {
+  it("rellena {n} y {total} en los tres idiomas", () => {
     const ref = { id: "M02" as const, n: 7, total: 30 };
     expect(renderMessage(ref, catalog, "es")).toBe("Roya: 7 de 30 hojas.");
+    expect(renderMessage(ref, catalog, "en")).toBe("Rust: 7 of 30 leaves.");
     expect(renderMessage(ref, catalog, "quz")).not.toMatch(/[{}]/);
+    for (const id of all) {
+      for (const lang of LANGS) {
+        expect(renderMessage({ id, n: 7, total: 30 }, catalog, lang), `${id}.${lang}`).not.toMatch(/[{}]/);
+      }
+    }
   });
 
   it("no habla de dosis, tratamientos, rendimiento ni precio", () => {
-    const text = all.map((id) => catalog.messages[id].es).join(" ");
-    expect(text).not.toMatch(/dosis|fungicida|aplica|tratamiento|rendimiento|precio|kg|litro/i);
+    const es = all.map((id) => catalog.messages[id].es).join(" ");
+    expect(es).not.toMatch(/dosis|fungicida|aplica|tratamiento|rendimiento|precio|kg|litro/i);
+    const en = all.map((id) => catalog.messages[id].en).join(" ");
+    expect(en).not.toMatch(/dose|fungicide|spray|treatment|yield|price|kg|litre|liter/i);
   });
 
   it("el audio es el clip del mensaje más el número", () => {

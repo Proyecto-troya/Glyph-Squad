@@ -27,8 +27,10 @@ rehearsing the flow, not for measuring anything.
 The service worker and installation require HTTPS (or `localhost`). Photos are taken through
 the native camera file picker, which also works without HTTPS.
 
-The interface is in Spanish, with fixed messages also shown in Quechua. The four screens are
-Muestra (sample), Resultado (result), Enviar (send) and Técnico (technician's list).
+The interface starts in Spanish; the ES / QU / EN button in the top bar switches it to Quechua
+or English. The Quechua text is a machine translation that no speaker has validated, and the
+app says so on screen. The four screens are Muestra (sample), Resultado (result), Enviar
+(send) and Técnico (technician's list).
 
 ## Model (`ml/`)
 

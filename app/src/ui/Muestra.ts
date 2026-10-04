@@ -10,7 +10,7 @@ import {
   TARGET_LEAVES,
 } from "../domain/sample";
 import { App } from "./app";
-import { el, LABEL_NAMES, messageCard } from "./dom";
+import { el, LABEL_KEYS, messageCard } from "./dom";
 import { icon } from "./icons";
 
 export function renderMuestra(root: HTMLElement, app: App): void {
@@ -24,14 +24,14 @@ export function renderMuestra(root: HTMLElement, app: App): void {
   const input = el("input", { type: "file", accept: "image/*", hidden: true });
   input.setAttribute("capture", "environment");
   const status = el("p", { class: "status" });
-  const shoot = el("button", { class: "primary big", type: "button", disabled: done }, icon("camera"), "Foto de una hoja");
+  const shoot = el("button", { class: "primary big", type: "button", disabled: done }, icon("camera"), app.t("shoot"));
   shoot.onclick = () => input.click();
 
   input.onchange = async () => {
     const file = input.files?.[0];
     if (!file) return;
     shoot.disabled = true;
-    status.textContent = "Mirando la hoja…";
+    status.textContent = app.t("looking");
     const started = performance.now();
     try {
       const pixels = await fileToPixels(file);
@@ -51,7 +51,7 @@ export function renderMuestra(root: HTMLElement, app: App): void {
     }
   };
 
-  const undo = el("button", { type: "button", disabled: sample.leaves.length === 0 }, icon("undo"), "Quitar la última");
+  const undo = el("button", { type: "button", disabled: sample.leaves.length === 0 }, icon("undo"), app.t("undo"));
   undo.onclick = () => {
     app.last = null;
     app.update(removeLastLeaf(sample));
@@ -59,7 +59,7 @@ export function renderMuestra(root: HTMLElement, app: App): void {
   const next = el(
     "button",
     { class: "primary", type: "button", disabled: sample.leaves.length === 0 },
-    "Ver resultado",
+    app.t("seeResult"),
     icon("arrow"),
   );
   next.onclick = () => app.go("resultado");
@@ -68,15 +68,15 @@ export function renderMuestra(root: HTMLElement, app: App): void {
   fill.style.width = `${Math.min(100, (sample.leaves.length / TARGET_LEAVES) * 100)}%`;
 
   root.append(
-    el("h1", {}, `Parcela ${sample.plot}`),
+    el("h1", {}, app.t("plotTitle", { plot: sample.plot })),
     el(
       "section",
       { class: "card" },
-      el("p", { class: "counter" }, el("strong", {}, String(sample.leaves.length)), `de ${TARGET_LEAVES} hojas`),
+      el("p", { class: "counter" }, el("strong", {}, String(sample.leaves.length)), app.t("counter", { total: TARGET_LEAVES })),
       el("div", { class: "progress" }, fill),
       done
-        ? el("p", { class: "done" }, icon("check"), "Muestra completa. Mira el resultado.")
-        : el("p", { class: "hint" }, "Una hoja sola sobre un plato blanco, con luz. 3 hojas por planta, 10 plantas."),
+        ? el("p", { class: "done" }, icon("check"), app.t("sampleDone"))
+        : el("p", { class: "hint" }, app.t("sampleHint")),
     ),
     shoot,
     input,
@@ -90,7 +90,7 @@ function lastPhoto(app: App): HTMLElement | null {
   if (!app.last) return null;
   const { leaf, seconds } = app.last;
   if (leaf.quality === "repetir") {
-    return el("div", { class: "card warn" }, el("h2", {}, "Repite la foto"), messageCard(photoRejected(), app.catalog));
+    return el("div", { class: "card warn" }, el("h2", {}, app.t("retake")), messageCard(photoRejected(), app));
   }
   const unsure = leaf.label === "duda";
   return el(
@@ -100,14 +100,12 @@ function lastPhoto(app: App): HTMLElement | null {
       "div",
       { class: `result-head tone-${leaf.label}` },
       el("span", { class: "dot" }),
-      el("h2", {}, LABEL_NAMES[leaf.label]),
+      el("h2", {}, app.t(LABEL_KEYS[leaf.label])),
     ),
     el(
       "p",
       {},
-      unsure
-        ? "La hoja se cuenta como duda para que la vea el técnico."
-        : `Confianza: ${Math.round(leaf.confidence * 100)} %`,
+      unsure ? app.t("unsureExplain") : app.t("confidence", { pct: Math.round(leaf.confidence * 100) }),
     ),
     el("p", { class: "hint" }, `${seconds.toFixed(1)} s`),
   );
@@ -123,29 +121,29 @@ function renderPlotForm(root: HTMLElement, app: App): void {
       "div",
       { class: "intro" },
       el("div", { class: "hero" }, icon("leaf")),
-      el("h1", {}, "Nueva muestra"),
-      el("p", {}, `${TARGET_LEAVES} hojas de tu parcela, una foto por hoja.`),
+      el("h1", {}, app.t("newSample")),
+      el("p", {}, app.t("newSampleIntro", { total: TARGET_LEAVES })),
     ),
     el(
       "section",
       { class: "card" },
-      el("label", {}, "Código de tu parcela (solo letras y números)", input),
+      el("label", {}, app.t("plotLabel"), input),
       error,
-      el("button", { class: "primary big", type: "submit" }, "Empezar", icon("arrow")),
+      el("button", { class: "primary big", type: "submit" }, app.t("start"), icon("arrow")),
     ),
     el(
       "ol",
       { class: "steps" },
-      el("li", {}, "Pon una hoja sola sobre un plato blanco, con luz."),
-      el("li", {}, "Toma la foto: 3 hojas por planta, 10 plantas."),
-      el("li", {}, "Envía el código al técnico por SMS."),
+      el("li", {}, app.t("step1")),
+      el("li", {}, app.t("step2")),
+      el("li", {}, app.t("step3")),
     ),
   );
   form.onsubmit = (event) => {
     event.preventDefault();
     const plot = normalizePlot(input.value);
     if (!plot) {
-      error.textContent = "Escribe el código de la parcela, por ejemplo P114.";
+      error.textContent = app.t("plotError");
       return;
     }
     app.last = null;

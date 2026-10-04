@@ -2,6 +2,7 @@ import "./style.css";
 import { loadClassifier } from "./adapters/classifier";
 import { stopAudio } from "./adapters/audio";
 import { storage } from "./adapters/storage";
+import { DEFAULT_LANG, isLang, LANG_INFO, LANGS, TextKey, translate } from "./domain/i18n";
 import { MessageCatalog } from "./domain/message";
 import { App, Route } from "./ui/app";
 import { el } from "./ui/dom";
@@ -11,11 +12,11 @@ import { renderMuestra } from "./ui/Muestra";
 import { renderResultado } from "./ui/Resultado";
 import { renderTecnico } from "./ui/Tecnico";
 
-const ROUTES: Record<Route, { name: string; icon: IconName }> = {
-  muestra: { name: "Muestra", icon: "leaf" },
-  resultado: { name: "Resultado", icon: "chart" },
-  enviar: { name: "Enviar", icon: "send" },
-  tecnico: { name: "Técnico", icon: "list" },
+const ROUTES: Record<Route, { name: TextKey; icon: IconName }> = {
+  muestra: { name: "tabSample", icon: "leaf" },
+  resultado: { name: "tabResult", icon: "chart" },
+  enviar: { name: "tabSend", icon: "send" },
+  tecnico: { name: "tabTech", icon: "list" },
 };
 
 function currentRoute(): Route {
@@ -23,14 +24,30 @@ function currentRoute(): Route {
   return route in ROUTES ? (route as Route) : "muestra";
 }
 
+/** Botón de idioma de la barra superior: un toque por idioma, con el actual marcado. */
+function languageSwitch(app: App): HTMLElement {
+  const group = el("div", { class: "lang-switch" });
+  group.setAttribute("role", "group");
+  group.setAttribute("aria-label", app.t("langLabel"));
+  for (const lang of LANGS) {
+    const button = el("button", { type: "button", title: LANG_INFO[lang].name }, LANG_INFO[lang].short);
+    button.setAttribute("aria-label", LANG_INFO[lang].name);
+    button.setAttribute("aria-pressed", String(lang === app.lang));
+    button.onclick = () => app.setLang(lang);
+    group.append(button);
+  }
+  return group;
+}
+
 async function start(): Promise<void> {
   const root = document.getElementById("app")!;
-  const [catalog, classifier, sample, techNumber, serviceUrl] = await Promise.all([
+  const [catalog, classifier, sample, techNumber, serviceUrl, savedLang] = await Promise.all([
     fetch("data/messages.json").then((r) => r.json() as Promise<MessageCatalog>),
     loadClassifier(),
     storage.loadCurrent(),
     storage.loadTechNumber(),
     storage.loadServiceUrl(),
+    storage.loadLang(),
   ]);
 
   const app: App = {
@@ -39,8 +56,16 @@ async function start(): Promise<void> {
     techNumber,
     serviceUrl,
     sentence: null,
+    techText: "",
     catalog,
     classifier,
+    lang: isLang(savedLang) ? savedLang : DEFAULT_LANG,
+    t: (key, values) => translate(app.lang, key, values),
+    setLang(lang) {
+      app.lang = lang;
+      void storage.saveLang(lang);
+      app.render();
+    },
     update(next) {
       app.sample = next;
       void storage.saveCurrent(next);
@@ -51,35 +76,32 @@ async function start(): Promise<void> {
     },
     render() {
       stopAudio();
+      document.documentElement.lang = LANG_INFO[app.lang].html;
       const route = currentRoute();
       const main = el("main", {});
       if (route === "muestra") renderMuestra(main, app);
       else if (route === "resultado") renderResultado(main, app);
       else if (route === "enviar") renderEnviar(main, app);
-      else renderTecnico(main);
+      else renderTecnico(main, app);
 
       const header = el(
         "header",
         { class: "appbar" },
         el("span", { class: "brand" }, el("span", { class: "brand-mark" }, icon("leaf")), "Leaf Plate"),
+        languageSwitch(app),
       );
       const nav = el("nav", {});
       for (const [key, tab] of Object.entries(ROUTES)) {
-        const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), tab.name);
+        const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), app.t(tab.name));
         if (key === route) link.setAttribute("aria-current", "page");
         nav.append(link);
       }
-      root.replaceChildren(header, main, nav);
-      if (classifier.kind === "fake") {
-        header.after(
-          el(
-            "p",
-            { class: "banner" },
-            icon("alert"),
-            "MODO DEMOSTRACIÓN: no hay modelo cargado; las clases son inventadas.",
-          ),
-        );
-      }
+
+      const banners: HTMLElement[] = [];
+      // El quechua de la interfaz no lo ha revisado nadie que lo hable: se avisa siempre.
+      if (app.lang === "quz") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("quzNotice")));
+      if (classifier.kind === "fake") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("demoBanner")));
+      root.replaceChildren(header, ...banners, main, nav);
     },
   };
 

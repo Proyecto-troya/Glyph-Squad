@@ -1,6 +1,8 @@
 import { rankPlots } from "../domain/ranking";
+import { SICK_LABELS } from "../domain/sample";
 import { parseCodes } from "../domain/sms";
-import { el } from "./dom";
+import { App } from "./app";
+import { el, LABEL_KEYS } from "./dom";
 import { icon } from "./icons";
 
 const EXAMPLES = [
@@ -10,33 +12,29 @@ const EXAMPLES = [
   "LP P088 30H PHO1 DUDA9",
 ].join("\n");
 
-export function renderTecnico(root: HTMLElement): void {
-  const text = el("textarea", { rows: 6, placeholder: "Pega aquí los códigos recibidos, uno por línea" });
+export function renderTecnico(root: HTMLElement, app: App): void {
+  const text = el("textarea", { rows: 6, placeholder: app.t("techPlaceholder"), value: app.techText });
   const file = el("input", { type: "file", accept: ".txt,.csv,text/plain", hidden: true });
-  const upload = el("button", { type: "button" }, icon("upload"), "Subir archivo");
+  const upload = el("button", { type: "button" }, icon("upload"), app.t("upload"));
   upload.onclick = () => file.click();
   const output = el("div", {});
 
   const refresh = () => {
+    // Se guarda lo pegado para no perderlo al cambiar de idioma o de pestaña.
+    app.techText = text.value;
     output.replaceChildren();
     const { payloads, invalid } = parseCodes(text.value);
     const rows = rankPlots(payloads);
     if (rows.length > 0) {
-      const table = el(
-        "table",
-        { class: "ranking" },
-        el("tr", {}, ...["Parcela", "% enfermas", "Hojas", "Detalle", "Avisos"].map((h) => el("th", {}, h))),
-      );
+      const headers = [app.t("colPlot"), app.t("colSick"), app.t("leavesTotal"), app.t("colDetail"), app.t("colFlags")];
+      const table = el("table", { class: "ranking" }, el("tr", {}, ...headers.map((h) => el("th", {}, h))));
       for (const row of rows) {
         const c = row.counts;
-        const detail = [
-          c.roya && `roya ${c.roya}`,
-          c.minador && `minador ${c.minador}`,
-          c.cercospora && `cercospora ${c.cercospora}`,
-          c.phoma && `phoma ${c.phoma}`,
-          c.duda && `duda ${c.duda}`,
-        ].filter(Boolean);
-        const flags = [row.over15 && "Plantas > 15 años", row.flagUnsure && "Muchas dudas"].filter(Boolean);
+        const detail = SICK_LABELS.filter((label) => c[label] > 0).map(
+          (label) => `${app.t(LABEL_KEYS[label]).toLowerCase()} ${c[label]}`,
+        );
+        if (c.duda > 0) detail.push(`${app.t("unsureShort")} ${c.duda}`);
+        const flags = [row.over15 && app.t("flagOld"), row.flagUnsure && app.t("flagUnsure")].filter(Boolean);
         table.append(
           el(
             "tr",
@@ -44,7 +42,7 @@ export function renderTecnico(root: HTMLElement): void {
             el("td", {}, row.plot),
             el("td", {}, el("span", { class: "pill" }, `${Math.round(row.sickPct)} %`)),
             el("td", {}, String(c.total)),
-            el("td", {}, detail.join(", ") || "sin enfermas"),
+            el("td", {}, detail.join(", ") || app.t("noSick")),
             el("td", {}, ...flags.map((flag) => el("span", { class: "chip" }, flag as string))),
           ),
         );
@@ -56,7 +54,7 @@ export function renderTecnico(root: HTMLElement): void {
         el(
           "div",
           { class: "card warn" },
-          el("p", { class: "error" }, "Líneas que no se entienden:"),
+          el("p", { class: "error" }, app.t("invalidLines")),
           el("ul", { class: "invalid" }, ...invalid.map((line) => el("li", {}, line))),
         ),
       );
@@ -70,17 +68,18 @@ export function renderTecnico(root: HTMLElement): void {
     text.value = [text.value.trim(), await chosen.text()].filter(Boolean).join("\n");
     refresh();
   };
-  const examples = el("button", { type: "button" }, icon("list"), "Cargar ejemplos");
+  const examples = el("button", { type: "button" }, icon("list"), app.t("loadExamples"));
   examples.onclick = () => {
     text.value = EXAMPLES;
     refresh();
   };
 
   root.append(
-    el("h1", {}, "Lista del técnico"),
-    el("p", { class: "hint" }, "Ordena las parcelas por % de hojas con señales. Son 30 hojas por parcela: a quién visitar lo decide el técnico."),
+    el("h1", {}, app.t("techTitle")),
+    el("p", { class: "hint" }, app.t("techHint")),
     text,
     el("div", { class: "row" }, upload, examples, file),
     output,
   );
+  refresh();
 }

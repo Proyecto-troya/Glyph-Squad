@@ -4,7 +4,10 @@
 import { Counts, SICK_LABELS, SickLabel, tooManyUnsure } from "./sample";
 
 export type MessageId = "M01" | "M02" | "M03" | "M04" | "M05" | "M06" | "M07" | "M08";
-export type Lang = "es" | "quz";
+/** Idiomas de la app. */
+export type Lang = "es" | "quz" | "en";
+/** Idiomas con clips de voz grabados: el inglés solo se lee. */
+export type AudioLang = "es" | "quz";
 
 export interface MessageRef {
   id: MessageId;
@@ -12,13 +15,11 @@ export interface MessageRef {
   total?: number;
 }
 
-export interface MessageEntry {
-  es: string;
-  quz: string;
-}
+export type MessageEntry = Record<Lang, string>;
 
 export interface MessageCatalog {
-  quzLabel: string;
+  /** Rótulo del quechua (traducción automática, sin validar), en cada idioma de la app. */
+  quzLabel: Record<Lang, string>;
   messages: Record<MessageId, MessageEntry>;
 }
 
