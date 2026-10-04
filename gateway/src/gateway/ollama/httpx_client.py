@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, AsyncIterator, Mapping
 from typing import Any
 
 import httpx
 
-from gateway.ollama.client import UpstreamHTTPError, UpstreamResponse, UpstreamUnavailable
+from gateway.ollama.client import UpstreamHTTPError, UpstreamResponse, UpstreamUnavailableError
 from gateway.ollama.ndjson import parse_line
 
 _CONNECTION_ERRORS = (
@@ -55,30 +55,31 @@ class HttpxOllamaClient:
                 method, path, json=dict(body) if body is not None else None
             )
         except _CONNECTION_ERRORS as exc:
-            raise UpstreamUnavailable(str(exc) or exc.__class__.__name__) from exc
+            raise UpstreamUnavailableError(str(exc) or exc.__class__.__name__) from exc
         return UpstreamResponse(response.status_code, _parse_body(response.content))
 
     async def stream(
         self, method: str, path: str, body: Mapping[str, Any] | None = None
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         try:
             async with self._client.stream(
                 method, path, json=dict(body) if body is not None else None
             ) as response:
                 if response.status_code != 200:
-                    raise UpstreamHTTPError(response.status_code, _parse_body(await response.aread()))
+                    raw = await response.aread()
+                    raise UpstreamHTTPError(response.status_code, _parse_body(raw))
                 async for line in response.aiter_lines():
                     obj = parse_line(line)
                     if obj is not None:
                         yield obj
         except _CONNECTION_ERRORS as exc:
-            raise UpstreamUnavailable(str(exc) or exc.__class__.__name__) from exc
+            raise UpstreamUnavailableError(str(exc) or exc.__class__.__name__) from exc
 
     async def head(self, path: str) -> int:
         try:
             response = await self._client.head(path)
         except _CONNECTION_ERRORS as exc:
-            raise UpstreamUnavailable(str(exc) or exc.__class__.__name__) from exc
+            raise UpstreamUnavailableError(str(exc) or exc.__class__.__name__) from exc
         return response.status_code
 
     async def upload(
@@ -91,7 +92,7 @@ class HttpxOllamaClient:
         try:
             response = await self._client.post(path, content=chunks, headers=headers)
         except _CONNECTION_ERRORS as exc:
-            raise UpstreamUnavailable(str(exc) or exc.__class__.__name__) from exc
+            raise UpstreamUnavailableError(str(exc) or exc.__class__.__name__) from exc
         return UpstreamResponse(response.status_code, _parse_body(response.content))
 
     async def aclose(self) -> None:

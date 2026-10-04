@@ -21,6 +21,7 @@ leaf-gateway = "gateway.__main__:main"
 dev = [
   "pytest>=8",
   "pytest-asyncio>=0.24",
+  "pytest-timeout>=2.3",
   "ruff>=0.6",
   "mypy>=1.11",
   "pyyaml>=6",
@@ -40,6 +41,10 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = ["integration: needs a real local Ollama at 127.0.0.1:11434"]
 addopts = "-q"
+timeout = 60
+filterwarnings = [
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 
 [tool.ruff]
 line-length = 100
@@ -57,7 +62,6 @@ ignore = ["ANN401", "S101", "RUF012"]
 python_version = "3.11"
 strict = true
 mypy_path = "src"
-packages = ["gateway"]
 files = ["src", "tests", "examples"]
 plugins = ["pydantic.mypy"]
 warn_unreachable = true

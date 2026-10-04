@@ -8,6 +8,7 @@ Response: ``{"id": "<uuid>", "type": "chunk" | "result" | "error", "data": {...}
 from __future__ import annotations
 
 import json
+import re
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -70,6 +71,15 @@ def extract_request_id(raw: Any) -> str | None:
         if isinstance(candidate, str) and 0 < len(candidate) <= 128:
             return candidate
     return None
+
+
+_ID_RE = re.compile(r'"id"\s*:\s*"([^"\\]{1,128})"')
+
+
+def sniff_request_id(text: str, limit: int = 4096) -> str | None:
+    """Pull an id out of a frame too large to parse, so the error can still carry it."""
+    match = _ID_RE.search(text[:limit])
+    return match.group(1) if match else None
 
 
 def parse_envelope(text: str) -> RequestEnvelope:

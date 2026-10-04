@@ -10,6 +10,7 @@ from gateway.protocol.envelope import (
     error_frame,
     parse_envelope,
     result_frame,
+    sniff_request_id,
 )
 from gateway.protocol.errors import ErrorCode, GatewayError
 
@@ -71,3 +72,10 @@ def test_response_frames() -> None:
         "data": {"code": "TIMEOUT", "message": "slow", "details": {"after_s": 5}},
     }
     assert error_frame(None, GatewayError(ErrorCode.UNAUTHORIZED, "no"))["id"] is None
+
+
+def test_sniff_request_id() -> None:
+    assert sniff_request_id('{"v":1,"id":"abc-123","action":"x"}') == "abc-123"
+    assert sniff_request_id('{"v": 1, "id" : "spaced"}') == "spaced"
+    assert sniff_request_id("[1,2,3]") is None
+    assert sniff_request_id('{"v":1,"action":"x","payload":{' + "x" * 5000 + '"id":"late"}') is None

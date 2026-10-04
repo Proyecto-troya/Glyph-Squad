@@ -13,9 +13,9 @@ from collections.abc import Iterable, Mapping
 
 from pydantic import SecretStr
 
-TOKEN_HEADER = "x-gateway-token"
+TOKEN_HEADER = "x-gateway-token"  # noqa: S105 (a header name, not a secret)
 PROTOCOL_NAME = "gateway.v1"
-TOKEN_PROTOCOL_PREFIX = "gateway.token."
+TOKEN_PROTOCOL_PREFIX = "gateway.token."  # noqa: S105 (a prefix, not a secret)
 
 
 def split_subprotocols(header_value: str | None) -> list[str]:

@@ -225,7 +225,8 @@ def test_create_gguf_rejects_quantize() -> None:
 
 def test_create_split_gguf_one_entry_per_shard() -> None:
     payload = CreatePayload.model_validate(
-        {"model": "m", "files": {"model-00001-of-00002.gguf": SHA, "model-00002-of-00002.gguf": SHA}}
+        {"model": "m",
+         "files": {"model-00001-of-00002.gguf": SHA, "model-00002-of-00002.gguf": SHA}}
     )
     assert payload.files is not None and len(payload.files) == 2
 

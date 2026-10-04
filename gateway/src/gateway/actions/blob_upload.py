@@ -33,7 +33,9 @@ def resolve_import_file(import_dir: Path | None, name: str) -> Path:
             ErrorCode.INVALID_REQUEST, "file must be directly inside IMPORT_DIR", {"file": name}
         )
     if not candidate.is_file():
-        raise GatewayError(ErrorCode.INVALID_REQUEST, "file not found in IMPORT_DIR", {"file": name})
+        raise GatewayError(
+            ErrorCode.INVALID_REQUEST, "file not found in IMPORT_DIR", {"file": name}
+        )
     return candidate
 
 

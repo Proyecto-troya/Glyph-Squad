@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Mapping
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -11,7 +11,7 @@ from gateway.ollama.client import (
     UpstreamHTTPError,
     UpstreamResponse,
     UpstreamStreamError,
-    UpstreamUnavailable,
+    UpstreamUnavailableError,
 )
 
 Key = tuple[str, str]
@@ -162,7 +162,9 @@ class FakeOllamaClient:
             return UpstreamResponse(200, {"status": "success"})
         return UpstreamResponse(404, {"error": f"no fake for {method} {path}"})
 
-    def _default_stream(self, method: str, path: str, body: dict[str, Any] | None) -> list[dict[str, Any]]:
+    def _default_stream(
+        self, method: str, path: str, body: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         if path == "/api/chat":
             return list(CHAT_CHUNKS)
         if path == "/api/generate":
@@ -180,7 +182,7 @@ class FakeOllamaClient:
         self, method: str, path: str, body: Mapping[str, Any] | None = None
     ) -> UpstreamResponse:
         if self.unavailable:
-            raise UpstreamUnavailable("connection refused")
+            raise UpstreamUnavailableError("connection refused")
         data = dict(body) if body is not None else None
         self.calls.append(RecordedCall(method, path, data))
         responder = self._responses.get((method, path))
@@ -188,9 +190,9 @@ class FakeOllamaClient:
 
     async def stream(
         self, method: str, path: str, body: Mapping[str, Any] | None = None
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         if self.unavailable:
-            raise UpstreamUnavailable("connection refused")
+            raise UpstreamUnavailableError("connection refused")
         data = dict(body) if body is not None else None
         self.calls.append(RecordedCall(method, path, data))
         self.streams_opened += 1
@@ -215,7 +217,7 @@ class FakeOllamaClient:
 
     async def head(self, path: str) -> int:
         if self.unavailable:
-            raise UpstreamUnavailable("connection refused")
+            raise UpstreamUnavailableError("connection refused")
         self.calls.append(RecordedCall("HEAD", path, None))
         return self.head_statuses.get(path, 404)
 
@@ -223,7 +225,7 @@ class FakeOllamaClient:
         self, path: str, chunks: AsyncIterator[bytes], content_length: int
     ) -> UpstreamResponse:
         if self.unavailable:
-            raise UpstreamUnavailable("connection refused")
+            raise UpstreamUnavailableError("connection refused")
         data = b"".join([c async for c in chunks])
         self.uploads.append((path, data, content_length))
         self.calls.append(RecordedCall("POST", path, None))
@@ -234,8 +236,9 @@ class FakeOllamaClient:
 
     # -- assertions ------------------------------------------------------------------
 
-    def last_body(self, path: str) -> dict[str, Any] | None:
+    def last_body(self, path: str) -> dict[str, Any]:
         for call in reversed(self.calls):
             if call.path == path:
+                assert call.body is not None, f"call to {path} had no body"
                 return call.body
         raise AssertionError(f"no call to {path}; calls={self.calls}")

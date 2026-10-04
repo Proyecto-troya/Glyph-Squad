@@ -10,7 +10,7 @@ from gateway.ollama.client import (
     UpstreamHTTPError,
     UpstreamResponse,
     UpstreamStreamError,
-    UpstreamUnavailable,
+    UpstreamUnavailableError,
 )
 from gateway.ollama.errors import code_for_status, ensure_ok, error_from_response, translate
 from gateway.ollama.ndjson import parse_line
@@ -140,7 +140,7 @@ def test_translate_exceptions() -> None:
     assert mid is not None and mid.code is ErrorCode.UPSTREAM_ERROR and mid.details == {
         "mid_stream": True
     }
-    down = translate(UpstreamUnavailable("refused"))
+    down = translate(UpstreamUnavailableError("refused"))
     assert down is not None and down.code is ErrorCode.UPSTREAM_UNAVAILABLE
     same = GatewayError(ErrorCode.TIMEOUT, "t")
     assert translate(same) is same

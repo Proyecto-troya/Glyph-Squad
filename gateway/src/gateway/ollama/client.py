@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, AsyncIterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -27,7 +27,7 @@ class UpstreamResponse:
         return dict(self.body) if isinstance(self.body, dict) else {}
 
 
-class UpstreamUnavailable(Exception):
+class UpstreamUnavailableError(Exception):
     """Ollama could not be reached (refused, reset, DNS-free connect failure)."""
 
 
@@ -58,7 +58,7 @@ class OllamaClient(Protocol):
 
     def stream(
         self, method: str, path: str, body: Mapping[str, Any] | None = None
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Yield parsed NDJSON objects. Raises ``UpstreamHTTPError`` on a non-200 status,
         ``UpstreamStreamError`` on an error line. Closing the iterator closes the stream."""
         ...

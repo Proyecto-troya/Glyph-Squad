@@ -8,7 +8,7 @@ from gateway.ollama.client import (
     UpstreamHTTPError,
     UpstreamResponse,
     UpstreamStreamError,
-    UpstreamUnavailable,
+    UpstreamUnavailableError,
 )
 from gateway.protocol.errors import ErrorCode, GatewayError
 
@@ -54,6 +54,6 @@ def translate(exc: BaseException) -> GatewayError | None:
         return error_from_response(exc.response)
     if isinstance(exc, UpstreamStreamError):
         return GatewayError(ErrorCode.UPSTREAM_ERROR, exc.message, {"mid_stream": True})
-    if isinstance(exc, UpstreamUnavailable):
+    if isinstance(exc, UpstreamUnavailableError):
         return GatewayError(ErrorCode.UPSTREAM_UNAVAILABLE, f"Ollama is unreachable: {exc}")
     return None

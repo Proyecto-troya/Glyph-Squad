@@ -220,7 +220,10 @@ async def test_upstream_down(registry: ActionRegistry) -> None:
 
 S1 = {"model": "nimble", "state": {"es_source": "a", "es_back": "a"},
       "questions": {"keep": {"type": "noul", "instructions": "same?"}}}
-PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+PNG = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5E"
+    "rkJggg=="
+)
 
 
 async def test_systemone_version_gates(registry: ActionRegistry) -> None:
@@ -316,7 +319,7 @@ async def test_copy_and_delete(registry: ActionRegistry) -> None:
     assert fake.last_body("/api/copy") == {"source": "gemma4", "destination": "g2"}
     assert await registry.execute("delete", {"model": "gemma4"}, ctx) == {"status": "success",
                                                                           "model": "gemma4"}
-    delete_call = [c for c in fake.calls if c.path == "/api/delete"][0]
+    delete_call = next(c for c in fake.calls if c.path == "/api/delete")
     assert delete_call.method == "DELETE" and delete_call.body == {"model": "gemma4"}
     await ctx.cache.show("gemma4")
     assert sum(1 for c in fake.calls if c.path == "/api/show") == 2
@@ -329,7 +332,9 @@ async def test_pull_and_push_when_enabled(registry: ActionRegistry) -> None:
     result = await registry.execute("pull", {"model": "gemma4:e2b"}, ctx)
     assert result["status"] == "success" and emitted.chunks[0] == {"status": "pulling manifest"}
     assert fake.last_body("/api/pull") == {"model": "gemma4:e2b", "stream": True}
-    result = await registry.execute("push", {"model": "me/m", "stream": False, "insecure": True}, ctx)
+    result = await registry.execute(
+        "push", {"model": "me/m", "stream": False, "insecure": True}, ctx
+    )
     assert fake.last_body("/api/push") == {"model": "me/m", "stream": False, "insecure": True}
     offline = FakeOllamaClient(unavailable=True)
     err = await _fails(registry, "pull", {"model": "x"}, ErrorCode.UPSTREAM_UNAVAILABLE,

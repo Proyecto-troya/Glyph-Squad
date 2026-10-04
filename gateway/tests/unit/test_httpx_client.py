@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 import httpx
 import pytest
 
-from gateway.ollama.client import UpstreamHTTPError, UpstreamStreamError, UpstreamUnavailable
+from gateway.ollama.client import UpstreamHTTPError, UpstreamStreamError, UpstreamUnavailableError
 from gateway.ollama.httpx_client import HttpxOllamaClient
 
 BASE = "http://127.0.0.1:11434"
@@ -64,12 +64,12 @@ async def test_connect_errors_become_unavailable() -> None:
         raise httpx.ConnectError("refused", request=request)
 
     client = _client(httpx.MockTransport(refuse))
-    with pytest.raises(UpstreamUnavailable):
+    with pytest.raises(UpstreamUnavailableError):
         await client.call("GET", "/api/version")
-    with pytest.raises(UpstreamUnavailable):
+    with pytest.raises(UpstreamUnavailableError):
         async for _ in client.stream("POST", "/api/chat", {}):
             pass
-    with pytest.raises(UpstreamUnavailable):
+    with pytest.raises(UpstreamUnavailableError):
         await client.head("/api/blobs/sha256:00")
 
 

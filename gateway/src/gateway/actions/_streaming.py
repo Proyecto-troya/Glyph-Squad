@@ -20,7 +20,12 @@ async def relay(
     if not body.get("stream", True):
         return ensure_ok(await ctx.client.call("POST", path, body))
     agg = aggregator()
-    async for chunk in ctx.client.stream("POST", path, body):
-        await ctx.emit(chunk)
-        agg.add(chunk)
+    stream = ctx.client.stream("POST", path, body)
+    try:
+        async for chunk in stream:
+            await ctx.emit(chunk)
+            agg.add(chunk)
+    finally:
+        # A cancel interrupts the loop; closing the generator closes the upstream response.
+        await stream.aclose()
     return agg.result()
