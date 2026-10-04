@@ -80,9 +80,9 @@ def test_cloud_model_is_blocked(live_app: Any) -> None:
             {"model": "gpt-oss:120b-cloud", "messages": [{"role": "user", "content": "hi"}]},
         )
         frame = collect(ws, "cl")[0]
-    # Blocked by the gateway when the tag is present, or by Ollama (cloud disabled) otherwise.
+    # Blocked by the gateway when the tag is present, or by Ollama's 403 (cloud disabled).
     assert frame["type"] == "error"
-    assert frame["data"]["code"] in {"CLOUD_MODEL_BLOCKED", "MODEL_NOT_FOUND", "INVALID_REQUEST"}
+    assert frame["data"]["code"] == "CLOUD_MODEL_BLOCKED", frame
 
 
 def test_decision_model_rejected_for_chat(live_app: Any, decision_model: str) -> None:

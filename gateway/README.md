@@ -45,7 +45,9 @@ queue inside Ollama.
 For every model-bound action the gateway reads the cached `/api/tags` entry. If
 `remote_model` or `remote_host` is set, the request ends with `CLOUD_MODEL_BLOCKED`.
 Name suffixes are not used: both `:cloud` and `-cloud` exist and neither is authoritative.
-Ollama's own 502 "cloud unreachable" also maps to `CLOUD_MODEL_BLOCKED`.
+Ollama's own answers map there too: 502 "cloud unreachable", and the 403
+`ollama cloud is disabled: remote model is unavailable` that v0.35.1 returns for a
+cloud model that was never pulled (observed live; the errors page [R18] does not list 403).
 
 ---
 
@@ -209,7 +211,7 @@ Rules:
 | `UNAUTHORIZED` | Missing/invalid token, or Origin not allowed (sent once, then close) |
 | `PAYLOAD_TOO_LARGE` | Frame above the limit, or Ollama 413 |
 | `MODEL_NOT_FOUND` | Ollama 404 (except `blob_exists`, which returns `exists: false`) |
-| `CLOUD_MODEL_BLOCKED` | `/api/tags` marks the model remote, or Ollama 502 |
+| `CLOUD_MODEL_BLOCKED` | `/api/tags` marks the model remote, Ollama 502, or Ollama 403 "cloud is disabled" |
 | `UNSUPPORTED_VERSION` | systemone below 0.35.0; systemone images below 0.35.1 |
 | `UPSTREAM_UNAVAILABLE` | Ollama unreachable |
 | `UPSTREAM_BUSY` | Ollama 429 or 503 (queue full), or the per-socket concurrency cap |
@@ -218,7 +220,9 @@ Rules:
 | `CANCELLED` | Client sent `cancel` |
 
 HTTP map: 400→`INVALID_REQUEST`, 404→`MODEL_NOT_FOUND`, 413→`PAYLOAD_TOO_LARGE`,
-429→`UPSTREAM_BUSY`, 500→`UPSTREAM_ERROR`, 502→`CLOUD_MODEL_BLOCKED`, 503→`UPSTREAM_BUSY`.
+429→`UPSTREAM_BUSY`, 500→`UPSTREAM_ERROR`, 502→`CLOUD_MODEL_BLOCKED`, 503→`UPSTREAM_BUSY`,
+403 with "cloud is disabled"→`CLOUD_MODEL_BLOCKED`; other 4xx→`INVALID_REQUEST`, other
+5xx→`UPSTREAM_ERROR`.
 
 ### Actions, one example each
 
@@ -364,6 +368,9 @@ newer page wins. Gaps the models account for:
 - The `/v1/systemone` operation description does not say that `images` require Ollama
   0.35.1 and Clef / Clef Flash; only the `SystemOneRequest.images` schema text and the
   decision guide [R7] / release notes [R29] do. The gateway gates on the version.
+- The errors page [R18] lists 400/404/429/500/502 only. Ollama 0.35.1 with
+  `OLLAMA_NO_CLOUD=1` answers **403** `ollama cloud is disabled: remote model is
+  unavailable` for cloud models, and `/v1/systemone` adds 413. Both are mapped.
 - `servers[0].url` is `http://localhost:11434`. The gateway never uses it; the upstream
   comes from `GATEWAY_OLLAMA_URL` and must be an IP literal.
 

@@ -147,6 +147,17 @@ def test_status_mapping(status: int, code: ErrorCode) -> None:
     assert err.details == {"upstream_status": status}
 
 
+def test_403_cloud_disabled_maps_to_cloud_model_blocked() -> None:
+    """Ollama 0.35.1 with OLLAMA_NO_CLOUD answers 403 for remote models (seen live)."""
+    blocked = error_from_response(
+        UpstreamResponse(403, {"error": "ollama cloud is disabled: remote model is unavailable"})
+    )
+    assert blocked.code is ErrorCode.CLOUD_MODEL_BLOCKED
+    assert error_from_response(UpstreamResponse(403, {"error": "forbidden"})).code is (
+        ErrorCode.INVALID_REQUEST
+    )
+
+
 def test_503_mentions_queue() -> None:
     assert "OLLAMA_MAX_QUEUE" in error_from_response(UpstreamResponse(503, None)).message
 

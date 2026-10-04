@@ -23,7 +23,13 @@ STATUS_TO_CODE: dict[int, ErrorCode] = {
 }
 
 
-def code_for_status(status: int) -> ErrorCode:
+# Ollama 0.35.x answers 403 with this text when OLLAMA_NO_CLOUD blocks a remote model.
+_CLOUD_DISABLED_MARKERS = ("cloud is disabled", "remote model")
+
+
+def code_for_status(status: int, message: str | None = None) -> ErrorCode:
+    if status == 403 and message and any(m in message.lower() for m in _CLOUD_DISABLED_MARKERS):
+        return ErrorCode.CLOUD_MODEL_BLOCKED
     if status in STATUS_TO_CODE:
         return STATUS_TO_CODE[status]
     if 400 <= status < 500:
@@ -32,8 +38,9 @@ def code_for_status(status: int) -> ErrorCode:
 
 
 def error_from_response(response: UpstreamResponse) -> GatewayError:
-    code = code_for_status(response.status)
-    message = response.error_message() or f"upstream returned HTTP {response.status}"
+    upstream_message = response.error_message()
+    code = code_for_status(response.status, upstream_message)
+    message = upstream_message or f"upstream returned HTTP {response.status}"
     if response.status == 503:
         message = f"{message} (Ollama queue full; see OLLAMA_MAX_QUEUE)"
     return GatewayError(code, message, {"upstream_status": response.status})

@@ -18,6 +18,7 @@ def main() -> None:
         level=settings.log_level.upper(),
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per upstream call is noise
     scheme = "wss" if settings.tls_enabled else "ws"
     logging.getLogger("gateway").info(
         "listening on %s://%s:%d/ws", scheme, settings.host, settings.port
