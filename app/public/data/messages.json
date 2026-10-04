@@ -1,0 +1,69 @@
+{
+  "quzLabel": {
+    "es": "Quechua: traducción automática y voz sintética, sin validar por hablante",
+    "quz": "Runasimi: makinapa t'ikrasqan, makinapa kunkan; manam runasimi rimaqpa chiqapchasqanchu",
+    "en": "Quechua: machine translation and synthetic voice, not validated by a speaker"
+  },
+  "messages": {
+    "M01": {
+      "es": "No vimos hojas enfermas en las {total} hojas.",
+      "quz": "{total} raphikunapi manam unqusqa raphita rikuykuchu.",
+      "en": "We saw no sick leaves among the {total} leaves."
+    },
+    "M02": {
+      "es": "Roya: {n} de {total} hojas.",
+      "quz": "Roya: {total} raphimanta {n}.",
+      "en": "Rust: {n} of {total} leaves."
+    },
+    "M03": {
+      "es": "Minador: {n} de {total} hojas.",
+      "quz": "Minador: {total} raphimanta {n}.",
+      "en": "Leaf miner: {n} of {total} leaves."
+    },
+    "M04": {
+      "es": "Cercospora: {n} de {total} hojas.",
+      "quz": "Cercospora: {total} raphimanta {n}.",
+      "en": "Cercospora: {n} of {total} leaves."
+    },
+    "M05": {
+      "es": "Phoma: {n} de {total} hojas.",
+      "quz": "Phoma: {total} raphimanta {n}.",
+      "en": "Phoma: {n} of {total} leaves."
+    },
+    "M06": {
+      "es": "No estoy seguro de muchas hojas. El técnico debería verlas.",
+      "quz": "Achka raphimanta manam segurochu kani. Técnico qhawananmi.",
+      "en": "I am not sure about many of the leaves. The technician should look at them."
+    },
+    "M07": {
+      "es": "La foto no salió bien. Pon una sola hoja sobre el plato, con luz, y repite la foto.",
+      "quz": "Fotoqa manam allinchu lluqsirqan. Huk raphillata platoman churay, k'anchaypi, hukmanta fotota hurquy.",
+      "en": "The photo did not come out well. Put a single leaf on the plate, in good light, and take the photo again."
+    },
+    "M08": {
+      "es": "Esto no es un diagnóstico. Envía el mensaje al técnico de la cooperativa; él decide.",
+      "quz": "Kayqa manam diagnósticochu. Cooperativapi técnicoman willakuyta apachiy; paymi decidinqa.",
+      "en": "This is not a diagnosis. Send the message to the cooperative's technician, who decides."
+    }
+  },
+  "say": {
+    "_nota": "Texto que se graba en cada clip. Los mensajes con conteo se oyen como: clip + número (n0–n30).",
+    "M01": { "es": "No vimos hojas enfermas.", "quz": "Manam unqusqa raphita rikuykuchu." },
+    "M02": { "es": "Hojas con señales de roya:", "quz": "Roya unquyniyuq raphikuna:" },
+    "M03": { "es": "Hojas con señales de minador:", "quz": "Minador unquyniyuq raphikuna:" },
+    "M04": { "es": "Hojas con señales de cercospora:", "quz": "Cercospora unquyniyuq raphikuna:" },
+    "M05": { "es": "Hojas con señales de phoma:", "quz": "Phoma unquyniyuq raphikuna:" },
+    "M06": {
+      "es": "No estoy seguro de muchas hojas. El técnico debería verlas.",
+      "quz": "Achka raphimanta manam segurochu kani. Técnico qhawananmi."
+    },
+    "M07": {
+      "es": "La foto no salió bien. Pon una sola hoja sobre el plato, con luz, y repite la foto.",
+      "quz": "Fotoqa manam allinchu lluqsirqan. Huk raphillata platoman churay, k'anchaypi, hukmanta fotota hurquy."
+    },
+    "M08": {
+      "es": "Esto no es un diagnóstico. Envía el mensaje al técnico de la cooperativa; él decide.",
+      "quz": "Kayqa manam diagnósticochu. Cooperativapi técnicoman willakuyta apachiy; paymi decidinqa."
+    }
+  }
+}

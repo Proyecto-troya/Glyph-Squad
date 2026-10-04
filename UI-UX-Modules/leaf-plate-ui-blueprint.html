@@ -1,0 +1,474 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Leaf Plate UI Blueprint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single spec-sheet column; drawings and tables scroll inside their own frames. */
+:root {
+  --bg: #f3f5f1;
+  --surface: #ffffff;
+  --fg: #18201b;
+  --muted: #56615a;
+  --line: #d3d9d2;
+  --line-strong: #8d998f;
+  --accent: #1f6b3a;
+  --accent-soft: #e0efe4;
+  --on-accent: #ffffff;
+  --note: #8a5a00;
+  --note-soft: #fdf1d0;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #1a211c; --fg: #e6ece7; --muted: #9aa69d; --line: #2f3a33; --line-strong: #6c7a70;
+    --accent: #6fc48c; --accent-soft: #1f3528; --on-accent: #0d1a12; --note: #e9bf5c; --note-soft: #3a2f12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #1a211c; --fg: #e6ece7; --muted: #9aa69d; --line: #2f3a33; --line-strong: #6c7a70;
+  --accent: #6fc48c; --accent-soft: #1f3528; --on-accent: #0d1a12; --note: #e9bf5c; --note-soft: #3a2f12;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 72px; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: 2rem; letter-spacing: -0.015em; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 0.95rem; }
+p { margin: 0; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.86em; }
+section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.lede { color: var(--muted); font-size: 1.02rem; }
+.muted { color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.frame { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow-x: auto; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { color: var(--muted); font-size: 0.9rem; max-width: 76ch; }
+
+/* Flow drawing */
+.flow { display: block; min-width: 860px; width: 100%; height: auto; color: var(--fg); font-family: var(--sans); }
+.flow .node { fill: var(--surface); stroke: currentColor; stroke-width: 1.3; }
+.flow .node.alt { stroke-dasharray: 5 4; stroke: var(--line-strong); }
+.flow .edge { fill: none; stroke: currentColor; stroke-width: 1.3; }
+.flow .edge.dash { stroke-dasharray: 4 4; stroke: var(--line-strong); }
+.flow .t { font-size: 13px; font-weight: 600; fill: currentColor; }
+.flow .s { font-size: 11px; fill: var(--muted); }
+.flow .l { font-size: 11.5px; font-weight: 500; fill: var(--accent); }
+.flow .head { fill: currentColor; }
+
+/* Shell + wireframes */
+.phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 22px 18px; align-items: start; }
+.phone-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.phone-wrap > p { font-size: 0.85rem; color: var(--muted); }
+.phone { border: 1.5px solid var(--line-strong); border-radius: 18px; overflow: hidden; background: var(--surface); display: flex; flex-direction: column; font-size: 12px; line-height: 1.35; }
+.p-bar { background: var(--accent); color: var(--on-accent); padding: 8px 10px; display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.p-banner { background: var(--note-soft); color: var(--note); padding: 5px 10px; border-bottom: 1px dashed var(--note); display: flex; justify-content: space-between; gap: 8px; }
+.p-main { padding: 10px; display: flex; flex-direction: column; gap: 6px; min-height: 250px; }
+.p-nav { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1.5px solid var(--line-strong); text-align: center; font-size: 10.5px; color: var(--muted); }
+.p-nav span { padding: 7px 2px; }
+.p-nav .on { color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+.wb { border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 8px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+.wb > code, .p-bar code, .p-banner code { font-size: 10.5px; }
+.wb > code { color: var(--accent); }
+.wb.btn { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.wb.btn > code { color: var(--on-accent); }
+.wb.cond { border-style: dashed; }
+.wb.plain { border: 0; padding: 2px 0; }
+.wb.group { flex-direction: column; align-items: stretch; gap: 5px; background: var(--bg); }
+.wb.group > .gh { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-weight: 600; }
+.wb.group > .gh code { color: var(--accent); font-weight: 400; font-size: 10.5px; }
+.wb.group .wb { background: var(--surface); }
+.wrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 22px; height: 12px; border: 1px solid var(--line-strong); border-radius: 3px; }
+.legend i.a { background: var(--accent); border-color: var(--accent); }
+.legend i.d { border-style: dashed; }
+.legend i.g { background: var(--bg); }
+
+/* Tables */
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+td code { overflow-wrap: anywhere; }
+.wide { min-width: 760px; }
+
+/* Tokens */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.sw { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); font-size: 0.8rem; }
+.sw i { display: block; height: 38px; border-bottom: 1px solid var(--line); }
+.sw div { padding: 6px 8px; display: flex; flex-direction: column; }
+.sw code { font-size: 0.78rem; }
+.sw span { color: var(--muted); }
+
+.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 76ch; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.two > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+</style>
+
+<div class="page">
+
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="eyebrow">Leaf Plate · app/src/ui</span>
+  <h1>UI Blueprint</h1>
+  <p class="lede">Everything a front-end developer needs to restyle or rebuild the interface without reading the TypeScript: the screens and how a user moves between them, the layout of each screen, every component with its class name and states, and the constraints the CSS must respect.</p>
+  <p class="muted">The UI is plain DOM built in TypeScript (no framework). All styling lives in one file, <code>app/src/style.css</code>. The class names below are the contract between the markup and the stylesheet.</p>
+</header>
+
+<section>
+  <span class="eyebrow">1 · Navigation</span>
+  <h2>Screens and how the user moves between them</h2>
+  <figure>
+    <div class="frame">
+      <svg class="flow" viewBox="0 0 950 390" role="img" aria-label="Screen flow: plot form, sampling, Resultado, Enviar in sequence; Enviar returns to the plot form; Resultado and Enviar show an empty state when the sample has no leaves; Técnico is an independent tab.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0 10 5 0 10z"/></marker>
+        </defs>
+
+        <!-- main row -->
+        <rect class="node" x="10" y="50" width="150" height="56" rx="8"/>
+        <text class="t" x="85" y="74" text-anchor="middle">Muestra</text>
+        <text class="s" x="85" y="92" text-anchor="middle">plot form · #/muestra</text>
+
+        <rect class="node" x="270" y="50" width="150" height="56" rx="8"/>
+        <text class="t" x="345" y="74" text-anchor="middle">Muestra</text>
+        <text class="s" x="345" y="92" text-anchor="middle">sampling · #/muestra</text>
+
+        <rect class="node" x="530" y="50" width="150" height="56" rx="8"/>
+        <text class="t" x="605" y="74" text-anchor="middle">Resultado</text>
+        <text class="s" x="605" y="92" text-anchor="middle">#/resultado</text>
+
+        <rect class="node" x="790" y="50" width="150" height="56" rx="8"/>
+        <text class="t" x="865" y="74" text-anchor="middle">Enviar</text>
+        <text class="s" x="865" y="92" text-anchor="middle">#/enviar</text>
+
+        <line class="edge" x1="160" y1="78" x2="268" y2="78" marker-end="url(#ah)"/>
+        <text class="l" x="215" y="70" text-anchor="middle">Empezar</text>
+        <line class="edge" x1="420" y1="78" x2="528" y2="78" marker-end="url(#ah)"/>
+        <text class="l" x="475" y="70" text-anchor="middle">Ver resultado</text>
+        <line class="edge" x1="680" y1="78" x2="788" y2="78" marker-end="url(#ah)"/>
+        <text class="l" x="735" y="70" text-anchor="middle">Preparar mensaje</text>
+
+        <!-- restart -->
+        <path class="edge" d="M865 50V24H85V48" marker-end="url(#ah)"/>
+        <text class="l" x="475" y="16" text-anchor="middle">Empezar otra parcela (sample archived, state cleared)</text>
+
+        <!-- photo loop -->
+        <path class="edge" d="M375 106V138H315V108" marker-end="url(#ah)"/>
+        <text class="l" x="345" y="155" text-anchor="middle">Foto de una hoja · Quitar la última</text>
+
+        <!-- empty states -->
+        <rect class="node alt" x="530" y="200" width="150" height="56" rx="8"/>
+        <text class="t" x="605" y="224" text-anchor="middle">Resultado</text>
+        <text class="s" x="605" y="242" text-anchor="middle">empty state</text>
+        <rect class="node alt" x="790" y="200" width="150" height="56" rx="8"/>
+        <text class="t" x="865" y="224" text-anchor="middle">Enviar</text>
+        <text class="s" x="865" y="242" text-anchor="middle">empty state</text>
+        <line class="edge dash" x1="605" y1="106" x2="605" y2="200"/>
+        <text class="s" x="613" y="178">0 leaves</text>
+        <line class="edge dash" x1="865" y1="106" x2="865" y2="200"/>
+        <text class="s" x="873" y="178">0 leaves</text>
+
+        <path class="edge" d="M865 256V290H85V108" marker-end="url(#ah)"/>
+        <line class="edge" x1="605" y1="256" x2="605" y2="290"/>
+        <text class="l" x="345" y="282" text-anchor="middle">Ir a Muestra</text>
+
+        <!-- tecnico -->
+        <rect class="node" x="270" y="322" width="150" height="56" rx="8"/>
+        <text class="t" x="345" y="346" text-anchor="middle">Técnico</text>
+        <text class="s" x="345" y="364" text-anchor="middle">#/tecnico</text>
+        <text class="s" x="434" y="354">independent tab: does not read or change the sample</text>
+      </svg>
+    </div>
+    <figcaption>Solid boxes are routes; dashed boxes are the same route rendered with no leaves in the sample. Green labels are the button that triggers the move. The bottom tab bar is always present and can jump to any of the four routes at any time, so every screen must render correctly in every sample state.</figcaption>
+  </figure>
+
+  <div class="frame">
+    <table class="wide">
+      <tr><th>Button</th><th>Enabled when</th><th>Effect</th></tr>
+      <tr><td>Empezar</td><td>Always; an invalid code shows <code>p.error</code> instead of moving on. Valid = 1–8 letters or digits.</td><td>Creates the sample; Muestra re-renders as the sampling view.</td></tr>
+      <tr><td>Foto de una hoja</td><td>Fewer than 30 leaves and no photo being processed.</td><td>Opens the camera; while classifying, <code>p.status</code> shows "Mirando la hoja…"; then a last-photo card appears.</td></tr>
+      <tr><td>Quitar la última</td><td>At least 1 leaf.</td><td>Removes the last leaf and the last-photo card.</td></tr>
+      <tr><td>Ver resultado</td><td>At least 1 leaf.</td><td>Goes to Resultado.</td></tr>
+      <tr><td>Sí / No</td><td>Always.</td><td>The chosen one gets <code>.chosen</code>; unlocks "Preparar mensaje".</td></tr>
+      <tr><td>Preparar mensaje</td><td>Sí or No has been answered.</td><td>Goes to Enviar.</td></tr>
+      <tr><td>Abrir SMS para el técnico</td><td>Always (it is an <code>a.button</code> with an <code>sms:</code> link).</td><td>Opens the phone's SMS app with the code prefilled. The app itself sends nothing.</td></tr>
+      <tr><td>Copiar mensaje</td><td>Always.</td><td>Label changes to "Copiado" or "Cópialo a mano".</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">2 · Page shell</span>
+  <h2>Four regions wrap every screen</h2>
+  <div class="two">
+    <div class="phone-wrap" style="max-width:300px">
+      <div class="phone">
+        <div class="p-bar"><span>Logo · Leaf Plate</span><code>header.appbar</code></div>
+        <div class="p-banner"><span>Demo-mode warning</span><code>p.banner</code></div>
+        <div class="p-main" style="min-height:150px"><div class="wb plain"><span>Screen content, scrolls</span><code>main</code></div></div>
+        <div class="p-nav"><span class="on">Muestra</span><span>Resultado</span><span>Enviar</span><span>Técnico</span></div>
+      </div>
+      <p><code>div#app</code> holds these in order. Tab bar selector is <code>nav</code>, tabs are <code>nav a</code>, current tab is <code>nav a.active</code>.</p>
+    </div>
+    <div>
+      <ul class="rules">
+        <li><strong>App bar</strong> is sticky at the top. Markup: <code>header.appbar &gt; span.brand &gt; span.brand-mark &gt; svg.icon</code>, then the text "Leaf Plate".</li>
+        <li><strong>Demo banner</strong> is inserted right after the app bar only when no real model is loaded. Design for both cases: with and without it.</li>
+        <li><strong>Main</strong> needs bottom padding taller than the tab bar, or the last button hides behind it.</li>
+        <li><strong>Tab bar</strong> is fixed to the bottom. Each tab is <code>a &gt; svg.icon + text</code>; the current one also has <code>aria-current="page"</code>.</li>
+        <li>Content column is capped at 640px and centred; on desktop the tab bar is capped to the same width.</li>
+        <li>Top and bottom bars must add <code>env(safe-area-inset-*)</code> to their padding (notched phones, installed PWA).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">3 · Screens</span>
+  <h2>Layout of each screen, top to bottom</h2>
+  <div class="legend">
+    <span><i></i> element, with its selector in green</span>
+    <span><i class="g"></i> container with children</span>
+    <span><i class="a"></i> primary action</span>
+    <span><i class="d"></i> appears only in some states</span>
+  </div>
+  <div class="phones">
+
+    <div class="phone-wrap">
+      <h3>A · Muestra, plot form</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb group"><div class="gh"><span>Intro, centred</span><code>.intro</code></div>
+          <div class="wb"><span>Round leaf icon</span><code>.hero</code></div>
+          <div class="wb"><span>Nueva muestra</span><code>h1</code></div>
+          <div class="wb"><span>30 hojas de tu parcela…</span><code>p</code></div>
+        </div>
+        <div class="wb group"><div class="gh"><span>Form card</span><code>section.card</code></div>
+          <div class="wb"><span>Código de tu parcela + input</span><code>label &gt; input</code></div>
+          <div class="wb cond"><span>Validation message</span><code>p.error</code></div>
+          <div class="wb btn"><span>Empezar →</span><code>.primary.big</code></div>
+        </div>
+        <div class="wb"><span>3 numbered steps</span><code>ol.steps &gt; li</code></div>
+      </div></div>
+      <p>Shown when there is no sample. The whole screen is one <code>form</code>.</p>
+    </div>
+
+    <div class="phone-wrap">
+      <h3>B · Muestra, sampling</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb"><span>Parcela P114</span><code>h1</code></div>
+        <div class="wb group"><div class="gh"><span>Progress card</span><code>section.card</code></div>
+          <div class="wb"><span><b>28</b> de 30 hojas</span><code>p.counter &gt; strong</code></div>
+          <div class="wb"><span>Progress bar</span><code>.progress &gt; .progress-fill</code></div>
+          <div class="wb"><span>How-to hint, or "Muestra completa" at 30</span><code>p.hint | p.done</code></div>
+        </div>
+        <div class="wb btn"><span>Foto de una hoja</span><code>.primary.big</code></div>
+        <div class="wb cond"><span>Mirando la hoja…</span><code>p.status</code></div>
+        <div class="wb cond"><span>Last-photo card (3 variants below)</span><code>.card</code></div>
+        <div class="wrow">
+          <div class="wb"><span>Quitar la última</span><code>button</code></div>
+          <div class="wb btn"><span>Ver resultado →</span><code>.primary</code></div>
+        </div>
+      </div></div>
+      <p>The two bottom buttons sit in a <code>.row</code>.</p>
+    </div>
+
+    <div class="phone-wrap">
+      <h3>C · Resultado</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb"><span>Parcela P114</span><code>h1</code></div>
+        <div class="wb group"><div class="gh"><span>Counts card</span><code>section.card.counts</code></div>
+          <div class="wb"><span>● Sana ▬▬▬ 18</span><code>.count-row.tone-sana</code></div>
+          <div class="wb"><span>● Roya ▬ 7</span><code>.count-row.tone-roya</code></div>
+          <div class="wb"><span>Hojas 28</span><code>.count-row.total</code></div>
+        </div>
+        <div class="wb group"><div class="gh"><span>Message card, 1 to 6 of them</span><code>.message</code></div>
+          <div class="wb"><span>Spanish text</span><code>p.es</code></div>
+          <div class="wb"><span>Quechua text</span><code>p.quz</code></div>
+          <div class="wb"><span>Translation disclaimer</span><code>p.quz-label</code></div>
+          <div class="wrow"><div class="wb"><span>Español</span><code>.listen</code></div><div class="wb"><span>Quechua</span><code>.listen</code></div></div>
+        </div>
+        <div class="wb group"><div class="gh"><span>Question card</span><code>.card</code></div>
+          <div class="wb"><span>¿Tus plantas tienen más de 15 años?</span><code>h2</code></div>
+          <div class="wrow"><div class="wb"><span>Sí</span><code>.chosen</code></div><div class="wb"><span>No</span><code>button</code></div></div>
+        </div>
+        <div class="wb btn"><span>Preparar mensaje →</span><code>.primary.big</code></div>
+      </div></div>
+      <p>Only classes with a count above 0 get a row. Row = <code>span.dot</code>, <code>span.count-name</code>, <code>.bar &gt; .bar-fill</code>, <code>strong</code>.</p>
+    </div>
+
+    <div class="phone-wrap">
+      <h3>D · Enviar</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb"><span>Mensaje para el técnico</span><code>h1</code></div>
+        <div class="wb"><span>Message card (not a diagnosis)</span><code>.message</code></div>
+        <div class="wb group"><div class="gh"><span>SMS card</span><code>section.card</code></div>
+          <div class="wb"><span>Tu mensaje</span><code>h2</code></div>
+          <div class="wb"><span>LP P114 28H ROYA7 CER1…</span><code>p.code</code></div>
+          <div class="wb cond"><span>AI sentence</span><code>p.sentence</code></div>
+          <div class="wb"><span>Notes, 2 lines</span><code>p.hint</code></div>
+        </div>
+        <div class="wb"><span>Número del técnico + input</span><code>label &gt; input[type=tel]</code></div>
+        <div class="wb btn"><span>Abrir SMS para el técnico</span><code>a.button.primary.big</code></div>
+        <div class="wrow"><div class="wb"><span>Copiar mensaje</span><code>button</code></div><div class="wb"><span>Empezar otra parcela</span><code>button</code></div></div>
+        <div class="wb cond"><span>Laptop settings, collapsed</span><code>details &gt; summary</code></div>
+      </div></div>
+      <p>The <code>details</code> block and the AI sentence are behind a feature flag that is currently off, but keep their styles.</p>
+    </div>
+
+    <div class="phone-wrap">
+      <h3>E · Técnico</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb"><span>Lista del técnico</span><code>h1</code></div>
+        <div class="wb"><span>Explanation</span><code>p.hint</code></div>
+        <div class="wb" style="min-height:54px"><span>Paste codes, one per line</span><code>textarea</code></div>
+        <div class="wrow"><div class="wb"><span>Subir archivo</span><code>button</code></div><div class="wb"><span>Cargar ejemplos</span><code>button</code></div></div>
+        <div class="wb group cond"><div class="gh"><span>Ranking, scrolls sideways</span><code>.card.scroll</code></div>
+          <div class="wb"><span>5 columns</span><code>table.ranking</code></div>
+          <div class="wb"><span>64 %</span><code>span.pill</code></div>
+          <div class="wb"><span>Muchas dudas</span><code>span.chip</code></div>
+        </div>
+        <div class="wb group cond"><div class="gh"><span>Unreadable lines</span><code>.card.warn</code></div>
+          <div class="wb"><span>Líneas que no se entienden:</span><code>p.error</code></div>
+          <div class="wb"><span>The raw lines</span><code>ul.invalid &gt; li</code></div>
+        </div>
+      </div></div>
+      <p>Columns: Parcela, % enfermas, Hojas, Detalle, Avisos. The table is wider than a phone, so its card must scroll horizontally.</p>
+    </div>
+
+    <div class="phone-wrap">
+      <h3>F · Empty state</h3>
+      <div class="phone"><div class="p-main">
+        <div class="wb group"><div class="gh"><span>Centred block</span><code>.empty</code></div>
+          <div class="wb"><span>Round icon</span><code>.hero</code></div>
+          <div class="wb"><span>Resultado / Enviar</span><code>h1</code></div>
+          <div class="wb"><span>Todavía no hay hojas en la muestra.</span><code>p</code></div>
+          <div class="wb btn"><span>Ir a Muestra →</span><code>button.primary</code></div>
+        </div>
+      </div></div>
+      <p>Used by Resultado and Enviar when the sample is missing or has 0 leaves.</p>
+    </div>
+
+  </div>
+
+  <h3>Last-photo card on screen B</h3>
+  <div class="frame">
+    <table class="wide">
+      <tr><th>Outcome</th><th>Container</th><th>Content</th></tr>
+      <tr><td>Classified</td><td><code>.card</code></td><td><code>.result-head.tone-{label}</code> holding <code>span.dot</code> + <code>h2</code> (Sana, Roya, Minador, Cercospora, Phoma); <code>p</code> "Confianza: 87 %"; <code>p.hint</code> "1.2 s"</td></tr>
+      <tr><td>Not sure</td><td><code>.card.warn</code></td><td><code>.result-head.tone-duda</code> with <code>h2</code> "No estoy seguro"; <code>p</code> "La hoja se cuenta como duda para que la vea el técnico."; <code>p.hint</code> seconds</td></tr>
+      <tr><td>Bad photo</td><td><code>.card.warn</code></td><td><code>h2</code> "Repite la foto", then a <code>.message</code> card (nested inside the card, so it must lose its own border and padding there)</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">4 · Components</span>
+  <h2>Every class the markup emits</h2>
+  <div class="frame">
+    <table class="wide">
+      <tr><th>Component</th><th>Selector</th><th>States and notes</th></tr>
+      <tr><td>Button</td><td><code>button</code>, <code>a.button</code></td><td>Content is text, optionally with an <code>svg.icon</code> before or after it. Needs default, pressed, <code>:disabled</code> and <code>:focus-visible</code> looks.</td></tr>
+      <tr><td>Primary</td><td><code>.primary</code></td><td>The one main action per screen.</td></tr>
+      <tr><td>Big</td><td><code>.big</code></td><td>Full width, tallest touch target. Always combined with <code>.primary</code>.</td></tr>
+      <tr><td>Chosen</td><td><code>.chosen</code></td><td>Selected answer in the Sí / No pair.</td></tr>
+      <tr><td>Listen</td><td><code>button.listen</code></td><td>Smaller audio button. If audio fails, its content is replaced by the text "Audio no disponible" (icon disappears).</td></tr>
+      <tr><td>Row</td><td><code>.row</code></td><td>Lays 2 children side by side, wrapping to stacked when they do not fit.</td></tr>
+      <tr><td>Card</td><td><code>.card</code>, <code>.card.warn</code></td><td><code>.warn</code> is the caution variant. May contain a <code>.message</code>.</td></tr>
+      <tr><td>Message card</td><td><code>.message</code></td><td>Children: <code>p.es</code>, <code>p.quz</code> (has <code>lang="qu"</code>), <code>p.quz-label</code>, <code>.row</code> of two <code>.listen</code> buttons.</td></tr>
+      <tr><td>Field</td><td><code>label &gt; input</code>, <code>textarea</code></td><td>The label text and the control are inside the same <code>label</code>. Input types used: <code>text</code>, <code>tel</code>, <code>url</code>.</td></tr>
+      <tr><td>Counter</td><td><code>p.counter &gt; strong</code></td><td>Big number in <code>strong</code>, then "de 30 hojas".</td></tr>
+      <tr><td>Progress</td><td><code>.progress &gt; .progress-fill</code></td><td>Fill width is set inline by the script (0–100 %).</td></tr>
+      <tr><td>Done note</td><td><code>p.done</code></td><td>Icon + "Muestra completa. Mira el resultado." Replaces the hint at 30 leaves.</td></tr>
+      <tr><td>Count row</td><td><code>.count-row</code>, <code>.count-row.total</code></td><td>Carries one <code>.tone-*</code> class. <code>.bar-fill</code> width is set inline. The total row has no dot and no bar.</td></tr>
+      <tr><td>Tone</td><td><code>.tone-sana</code> <code>-roya</code> <code>-minador</code> <code>-cercospora</code> <code>-phoma</code> <code>-duda</code></td><td>Sets the colour used by <code>.dot</code> and <code>.bar-fill</code> inside it.</td></tr>
+      <tr><td>Code box</td><td><code>p.code</code></td><td>The SMS text. Monospace, must wrap, must be selectable in one tap.</td></tr>
+      <tr><td>Sentence</td><td><code>p.sentence</code></td><td>Empty most of the time; hide when <code>:empty</code>.</td></tr>
+      <tr><td>Text helpers</td><td><code>.hint</code>, <code>.status</code>, <code>.error</code></td><td>Secondary text, progress text, error text. <code>.status</code> and <code>.error</code> exist empty in the DOM; hide when <code>:empty</code>.</td></tr>
+      <tr><td>Intro / steps</td><td><code>.intro</code>, <code>.hero</code>, <code>ol.steps</code></td><td><code>.hero</code> is the round icon holder, also used inside <code>.empty</code>.</td></tr>
+      <tr><td>Ranking</td><td><code>.scroll</code>, <code>table.ranking</code>, <code>.pill</code>, <code>.chip</code></td><td>Header cells are <code>th</code> in the first <code>tr</code> (no <code>thead</code>). <code>.pill</code> = percentage, <code>.chip</code> = warning flag.</td></tr>
+      <tr><td>Invalid list</td><td><code>ul.invalid</code></td><td>Raw text lines the parser rejected.</td></tr>
+      <tr><td>Icon</td><td><code>svg.icon</code></td><td>24×24 viewBox, stroke only, coloured with <code>currentColor</code>. Sized in <code>em</code> so it follows the text.</td></tr>
+    </table>
+  </div>
+  <p class="muted">Icon names available in <code>app/src/ui/icons.ts</code>: leaf, chart, send, list, camera, volume, message, copy, undo, check, alert, upload, refresh, plus, arrow.</p>
+</section>
+
+<section>
+  <span class="eyebrow">5 · Tokens</span>
+  <h2>Current values in style.css</h2>
+  <p class="muted">These are the values in use today, defined as custom properties on <code>:root</code>. Change them freely; keep the names if you want the rest of the stylesheet to keep working.</p>
+  <div class="swatches">
+    <div class="sw"><i style="background:#1f6b3a"></i><div><code>--green</code><span>#1f6b3a · brand, primary</span></div></div>
+    <div class="sw"><i style="background:#17522c"></i><div><code>--green-dark</code><span>#17522c · pressed, text on soft</span></div></div>
+    <div class="sw"><i style="background:#e4f1e8"></i><div><code>--green-soft</code><span>#e4f1e8 · selected, code box</span></div></div>
+    <div class="sw"><i style="background:#1a1d1a"></i><div><code>--ink</code><span>#1a1d1a · text</span></div></div>
+    <div class="sw"><i style="background:#5b6159"></i><div><code>--muted</code><span>#5b6159 · secondary text</span></div></div>
+    <div class="sw"><i style="background:#f6f5ef"></i><div><code>--paper</code><span>#f6f5ef · page</span></div></div>
+    <div class="sw"><i style="background:#ffffff"></i><div><code>--surface</code><span>#ffffff · cards, inputs</span></div></div>
+    <div class="sw"><i style="background:#dedbd0"></i><div><code>--line</code><span>#dedbd0 · borders</span></div></div>
+    <div class="sw"><i style="background:#fff4d6"></i><div><code>--warn</code><span>#fff4d6 · caution fill</span></div></div>
+    <div class="sw"><i style="background:#e2c25e"></i><div><code>--warn-line</code><span>#e2c25e · caution border</span></div></div>
+    <div class="sw"><i style="background:#6b4e00"></i><div><code>--warn-ink</code><span>#6b4e00 · caution text</span></div></div>
+    <div class="sw"><i style="background:#a12020"></i><div><code>--danger</code><span>#a12020 · errors</span></div></div>
+  </div>
+  <h3>Leaf class colours (<code>--tone</code>)</h3>
+  <div class="swatches">
+    <div class="sw"><i style="background:#2e8b57"></i><div><code>.tone-sana</code><span>#2e8b57</span></div></div>
+    <div class="sw"><i style="background:#c8601a"></i><div><code>.tone-roya</code><span>#c8601a</span></div></div>
+    <div class="sw"><i style="background:#8a5a2b"></i><div><code>.tone-minador</code><span>#8a5a2b</span></div></div>
+    <div class="sw"><i style="background:#7a4fa3"></i><div><code>.tone-cercospora</code><span>#7a4fa3</span></div></div>
+    <div class="sw"><i style="background:#2f6f9f"></i><div><code>.tone-phoma</code><span>#2f6f9f</span></div></div>
+    <div class="sw"><i style="background:#b08a1e"></i><div><code>.tone-duda</code><span>#b08a1e</span></div></div>
+  </div>
+  <div class="frame">
+    <table>
+      <tr><th>Scale</th><th>Value</th></tr>
+      <tr><td>Type</td><td>System font stack, base 18px, line height 1.4. <code>h1</code> 1.5rem, <code>h2</code> 1.1rem, helpers 0.85rem, tab labels 0.7rem.</td></tr>
+      <tr><td>Radius</td><td>14px for buttons, inputs and cards (<code>--radius</code>); fully round for pills, chips, bars and dots.</td></tr>
+      <tr><td>Touch targets</td><td>Buttons at least 52px tall; <code>.big</code> 64px; <code>.listen</code> 44px.</td></tr>
+      <tr><td>Spacing</td><td>16px page gutter, 16px card padding, 12px between blocks, 10px gap inside a row.</td></tr>
+      <tr><td>Width</td><td>Content column max 640px.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">6 · Constraints</span>
+  <h2>Rules the CSS has to respect</h2>
+  <ul class="rules">
+    <li><strong>Offline first.</strong> The app is a PWA that must work with no connection. No web fonts, no CDN stylesheets, no remote images. Everything ships in the bundle, and the whole download has a 20 MB budget shared with the model and audio.</li>
+    <li><strong>Phone in a field.</strong> Target a small Android screen (about 360–400px wide) used outdoors: large text, strong contrast, large touch targets. Light theme only today.</li>
+    <li><strong>Class names are the contract.</strong> The script only adds the classes listed in section 4. Renaming one means editing the matching file in <code>app/src/ui/</code>.</li>
+    <li><strong>Inline widths belong to the script.</strong> <code>.progress-fill</code> and <code>.bar-fill</code> get <code>style="width: N%"</code>; do not override width on them.</li>
+    <li><strong>The <code>hidden</code> attribute must win.</strong> Two file inputs are in the DOM with <code>hidden</code>; keep <code>[hidden] { display: none !important }</code>.</li>
+    <li><strong>Empty text nodes.</strong> <code>p.status</code>, <code>p.error</code> and <code>p.sentence</code> are rendered empty and filled later; they should take no space while empty.</li>
+    <li><strong>Every render rebuilds the DOM.</strong> The script replaces the whole shell on each state change, so entrance animations would replay on every tap. Keep motion to transitions on hover, press and width.</li>
+    <li><strong>Quechua text.</strong> <code>p.quz</code> strings are long words; make sure they wrap inside cards.</li>
+  </ul>
+  <div class="frame">
+    <table>
+      <tr><th>File</th><th>What it holds</th></tr>
+      <tr><td><code>app/src/style.css</code></td><td>All styles. The only file a CSS-only change needs.</td></tr>
+      <tr><td><code>app/src/main.ts</code></td><td>Shell: app bar, demo banner, tab bar, routing by <code>location.hash</code>.</td></tr>
+      <tr><td><code>app/src/ui/Muestra.ts</code></td><td>Screens A and B, last-photo card.</td></tr>
+      <tr><td><code>app/src/ui/Resultado.ts</code></td><td>Screen C.</td></tr>
+      <tr><td><code>app/src/ui/Enviar.ts</code></td><td>Screen D.</td></tr>
+      <tr><td><code>app/src/ui/Tecnico.ts</code></td><td>Screen E.</td></tr>
+      <tr><td><code>app/src/ui/dom.ts</code></td><td>Shared pieces: message card, empty state, class display names.</td></tr>
+      <tr><td><code>app/src/ui/icons.ts</code></td><td>Inline SVG icon set.</td></tr>
+    </table>
+  </div>
+  <p class="muted">To see it running: <code>npm run dev</code> at the repo root, then open the printed URL at phone width.</p>
+</section>
+
+</div>
+
+</body></html>

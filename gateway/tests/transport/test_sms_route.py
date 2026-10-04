@@ -61,8 +61,17 @@ def test_post_sms_falls_back_when_model_is_down() -> None:
     assert data["reason"] == "upstream:UPSTREAM_UNAVAILABLE"
 
 
-def test_post_sms_requires_the_token() -> None:
+def test_post_sms_needs_no_token_by_default_like_the_app_client() -> None:
+    """PLAN.md's service has no auth and app/src/adapters/smsService.ts sends no header."""
     with TestClient(create_app(make_settings(), client=_fake())) as client:
+        response = client.post("/api/sms", json=BODY, headers={"Content-Type": "application/json"})
+    assert response.status_code == 200 and response.json()["source"] == "llm"
+
+
+def test_post_sms_token_can_be_required() -> None:
+    settings = make_settings(sms_require_token=True)
+    with TestClient(create_app(settings, client=_fake())) as client:
+        assert client.post("/api/sms", json=BODY, headers=HEADERS).status_code == 200
         assert client.post("/api/sms", json=BODY).status_code == 401
         assert (
             client.post("/api/sms", json=BODY, headers={"X-Gateway-Token": "nope"}).status_code

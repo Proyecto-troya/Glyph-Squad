@@ -10,8 +10,13 @@ from gateway.sms.service import SmsService
 
 
 def require_token(request: Request, x_gateway_token: str | None = Header(default=None)) -> None:
-    """Runs before body validation, so unauthenticated callers only ever see 401."""
-    if not token_matches(x_gateway_token, request.app.state.runtime.settings.token):
+    """Runs before body validation, so unauthenticated callers only ever see 401.
+
+    Enforced only with GATEWAY_SMS_REQUIRE_TOKEN=true; the plan's service and the app's
+    client (`requestSentence`) exchange no token.
+    """
+    settings = request.app.state.runtime.settings
+    if settings.sms_require_token and not token_matches(x_gateway_token, settings.token):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "missing or invalid gateway token")
 
 

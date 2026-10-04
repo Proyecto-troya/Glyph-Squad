@@ -89,6 +89,9 @@ class Settings(BaseSettings):
 
     # POST /api/sms: one validated Spanish sentence for the technician SMS.
     sms_enabled: bool = True
+    # PLAN.md's service has no auth and the app's client sends no header, so this is off by
+    # default. Turn it on to require X-Gateway-Token on /api/sms as well.
+    sms_require_token: bool = False
     sms_model: str = "llama3.2:3b"
     sms_timeout_s: float = Field(default=10.0, gt=0)
     sms_keep_alive: str = "30m"

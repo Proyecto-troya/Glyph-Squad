@@ -6,7 +6,8 @@ Ollama native API action to clients on the local network, by IP, fully offline.
 It is demo-laptop tooling: Quechua translation drafts, back-translation checks, and
 code/test help. **The phone app never imports this package and never opens a WebSocket
 to it.** `tests/unit/test_repo_rules.py` fails if `app/src` ever does. The one sanctioned
-HTTP call is `POST /api/sms` (section 5b), always guarded by the app's code-only fallback.
+HTTP call is `POST /api/sms` (section 5b), the LLM step PLAN.md defines, always guarded by
+the app's code-only fallback.
 
 Tested with **Ollama v0.35.1** (latest stable, 2026-09-29). The v0.40 pre-release is
 not a target. Python 3.11+, Pydantic v2, httpx, uvicorn.
@@ -19,7 +20,7 @@ side is complete**; what remains is on the phone/app side (see "Open items").
 | Route | What it serves | Status (2026-10-04) |
 |---|---|---|
 | `/ws` (WebSocket) | All 18 Ollama actions: generate, chat, load, unload, embed, systemone, list, ps, show, version, create, blob_exists, blob_upload, copy, delete, pull, push, ping | Implemented; tested offline (fake Ollama) and live (Ollama 0.35.1 over the LAN IP, ws and wss) |
-| `POST /api/sms` | One validated Spanish sentence for the technician SMS, template fallback | Implemented; tested offline and live, model and fallback paths |
+| `POST /api/sms` | PLAN.md's LLM sentence service: one validated Spanish sentence for the technician SMS, template fallback; no token by default (the app's client sends none) | Implemented; tested offline and live, model and fallback paths |
 | `OPTIONS /api/sms` (CORS) | Preflight for the phone's browser origin(s) in `GATEWAY_ALLOWED_ORIGINS` | Implemented; tested over http and https |
 | `/docs`, `/redoc`, `/openapi.json` | FastAPI's own docs pages | Disabled on purpose: they load from a CDN and the laptop is offline |
 
@@ -54,12 +55,12 @@ Branch `feature/endpoint_ollama`. Everything below lives under `gateway/`.
 `translation_draft.py`, `back_translation_check.py`, `similarity_signal.py`,
 `bulk_drafts.py`, `demo_warmup.py`, `ops_panel.py`. Section 5 describes each.
 
-### Tests `tests/` (243 collected)
+### Tests `tests/` (244 collected)
 
 | Suite | Count | Covers |
 |---|---|---|
 | `unit/` | 198 | Envelope validation; every payload model (think, images, systemone bounds, GGUF + `quantize`, digests); NDJSON, aggregators, error map incl. 503; version gates at 0.34.x / 0.35.0 / 0.35.1; cache TTL; httpx adapter via `MockTransport`; auth, origin, limits, cloud guard, routing; every action's request and response mapping incl. blob path traversal; settings; schema drift; the SMS request model, every SMS validation rule, fallback sizes and service paths; repo rules (no hostnames, files under 500 lines, `app/src` never touches the gateway) |
-| `transport/` | 22 | TestClient WebSocket: auth failure (4401), subprotocol auth, origin (4403), envelope errors keep the id, unknown/disabled actions, streaming order with a single `result`, cancel mid-stream closes upstream, unknown-id cancel ignored, concurrent ids, duplicate id, concurrency cap, timeout, mid-stream error line, upstream down, cloud model rejected, oversize and image size limits, tool-loop round trip with `thinking` and `tool_name`; `POST /api/sms` auth before body, 422, fallback, CORS preflight, disabled |
+| `transport/` | 23 | TestClient WebSocket: auth failure (4401), subprotocol auth, origin (4403), envelope errors keep the id, unknown/disabled actions, streaming order with a single `result`, cancel mid-stream closes upstream, unknown-id cancel ignored, concurrent ids, duplicate id, concurrency cap, timeout, mid-stream error line, upstream down, cloud model rejected, oversize and image size limits, tool-loop round trip with `thinking` and `tool_name`; `POST /api/sms` auth before body, 422, fallback, CORS preflight, disabled |
 | `contract/` | 4 | Every `operationId` in `docs/openapi.yaml` is registered or in the explicit out-of-scope list; the registry claims nothing the spec lacks |
 | `examples/` | 9 | Each example against the fake Ollama through the real transport, plus interleaved ids and cancel in the client |
 | `integration/` | 10 | Real Ollama at `127.0.0.1:11434` (marker `integration`, skips when unreachable): version, list/ps, chat stream + cancel, structured drafts, unit-length embeddings, cloud model blocked, decision model rejected for chat, systemone choice probabilities, warm-up/unload, `/api/sms` live sentence |
@@ -84,7 +85,7 @@ scripted streams, delays, failures) and `tests/helpers.py`.
   (decision, 9.5 GB), `llama3.2:3b` (SMS sentence, 2.0 GB).
 - Tool versions: Python 3.13.7, uv 0.7.19, FastAPI 0.142, Starlette 1.7, Pydantic 2.13,
   httpx 0.28, uvicorn 0.54, websockets 17.2.
-- Gate at head: 243 tests collected, 233 pass offline against the fake and 10 pass live
+- Gate at head: 244 tests collected, 234 pass offline against the fake and 10 pass live
   against Ollama; `mypy --strict`, `ruff check` and `ruff format --check` clean.
 
 ### Known behaviours found during verification
@@ -108,10 +109,11 @@ or files outside this repository:
 
 1. Run the LAN checks from a **physically separate device** on the demo hotspot (all live
    checks so far ran from the laptop to its own LAN IP).
-2. Wire the Enviar screen to `POST /api/sms` with the code-only SMS as default (app side),
-   then test it from a **real browser** so CORS and the token header are exercised end to end.
-3. Update **PLAN.md** (not in this repo): the SMS sentence is a deliberate exception to
-   "no free text generation" and "the classifier is the only AI".
+2. In the app, set `app.serviceUrl` to the laptop and flip `SMS_SERVICE_ENABLED`
+   (`app/src/adapters/smsService.ts`), then test from a **real browser** so CORS is exercised
+   end to end. List the app's origin in `GATEWAY_ALLOWED_ORIGINS`.
+3. PLAN.md already describes this service (section 2, "Servicio LLM"); the root README's
+   guardrails paragraph now points here. Nothing to change in the plan.
 4. Set **`OLLAMA_CONTEXT_LENGTH`** for the translation prompts (currently unset; gemma4
    loaded at 4096) and confirm with the `ps` action.
 5. For **wss** on the phone, install the self-signed certificate on the device or issue one
@@ -454,16 +456,24 @@ from people.
 
 ## 5b. `POST /api/sms`: one sentence for the technician SMS
 
-Added from a teammate's spec. The app builds the deterministic code line itself
-(`LP P114 30H ROYA7 CER1 DUDA2 E15+`); this endpoint returns **one** extra Spanish line.
-The text is validated on the server before anyone sees it, so it is a plain HTTP call
-rather than the `/ws` token stream. It is served by the same process and port as `/ws`
-(set `GATEWAY_PORT=8000` to match the spec's diagram).
+This is the "Servicio LLM" step of [PLAN.md](../PLAN.md) section 2, built from a teammate's
+spec. The app builds the deterministic code line itself (`LP P114 30H ROYA7 CER1 DUDA2
+E15+`); this endpoint returns **one** extra Spanish line. The text is validated on the
+server before anyone sees it, so it is a plain HTTP call rather than the `/ws` token
+stream. It is served by the same process and port as `/ws`; the plan puts it on `:8000`
+(`GATEWAY_PORT=8000`).
 
-**Owner's note.** This is the one place the phone app talks to the laptop. It breaks two
-rules of the original plan ("no free text generation", "the vision classifier is the only
-AI"), so the plan and the root README carry an explicit exception. The app must keep the
-code-only SMS as its default and use this sentence only when the laptop answers in time.
+**How it fits the app.** `app/src/adapters/smsService.ts` already has the client
+(`requestSentence`, switched off by `SMS_SERVICE_ENABLED`) and `app/src/domain/sms.ts`
+builds exactly this request. The Enviar screen posts to `app.serviceUrl`, so point it at
+`http://<laptop-ip>:8000` and flip the flag. The app keeps the code-only SMS as default and
+sends it alone when the laptop does not answer within 10 s. `api/sms.js` on Vercel is the
+online stand-in with the same contract.
+
+**Auth.** The plan defines no token for this call and the app's client sends none, so
+`/api/sms` accepts requests without `X-Gateway-Token` by default. Set
+`GATEWAY_SMS_REQUIRE_TOKEN=true` to require the gateway token here too (checked before body
+validation).
 
 ```
 LP P114 30H ROYA7 CER1 DUDA2 E15+
@@ -472,7 +482,7 @@ Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de ma
 
 ### Request
 
-`POST /api/sms` with header `X-Gateway-Token: <token>` (same token as `/ws`).
+`POST /api/sms`, JSON body; `X-Gateway-Token: <token>` only when `GATEWAY_SMS_REQUIRE_TOKEN=true`.
 
 | Field | Type | Rule |
 |---|---|---|
@@ -482,7 +492,7 @@ Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de ma
 | `flagUnsure` | boolean | `duda` above 20 % of `total` (computed by the app) |
 | `code` | string | the app's code line, starts with `LP `, single line, contains `plot` |
 
-Bad bodies return 422; a missing or wrong token returns 401.
+Bad bodies return 422; with the token required, a missing or wrong token returns 401.
 
 ### Response
 
@@ -544,8 +554,8 @@ typical answer takes 0.7 to 1.5 s with the model loaded. `reason` in the respons
 `tests/unit/test_sms.py` (request model, every validation rule, fallback sizes, service
 paths: model sentence accepted, banned word, bad JSON, cloud model, timeout, upstream down,
 HTTP errors, the exact Ollama parameters), `tests/transport/test_sms_route.py` (200 with
-the model sentence, fallback with Ollama down, 401, 422, CORS preflight, disabled
-endpoint) and `test_sms_sentence_live` in the integration suite.
+the model sentence, fallback with Ollama down, no token needed by default, 401 before 422
+when the token is required, CORS preflight, disabled endpoint) and `test_sms_sentence_live` in the integration suite.
 
 ---
 

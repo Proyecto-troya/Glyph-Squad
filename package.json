@@ -1,0 +1,26 @@
+{
+  "name": "leaf-plate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "size": "node scripts/size.mjs",
+    "assets:sync": "node scripts/sync-design-assets.mjs",
+    "secrets:check": "node scripts/twilio-check.mjs",
+    "secrets:push": "node scripts/vercel-env.mjs"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "onnxruntime-web": "^1.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

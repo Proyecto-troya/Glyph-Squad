@@ -156,7 +156,7 @@ def test_sms_sentence_live(live_app: Any, installed_models: dict[str, dict[str, 
         "flagUnsure": False,
         "code": "LP P114 30H ROYA7 CER1 DUDA2 E15+",
     }
-    response = live_app.post("/api/sms", json=body, headers={"X-Gateway-Token": "test-token"})
+    response = live_app.post("/api/sms", json=body)  # no token, as the app's client sends none
     assert response.status_code == 200
     data = response.json()
     assert data["source"] in {"llm", "fallback"}

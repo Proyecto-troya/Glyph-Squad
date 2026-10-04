@@ -219,9 +219,22 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# Leaf Plate
+node_modules/
+ml/data/
+ml/out/
+
+.vercel
+.env*
+# the documented examples stay in git
+!.env.example
+!**/.env.example
+
 # macOS / exFAT metadata
 ._*
 .DS_Store
 
-# gateway local env
-gateway/.env
+# gateway (laptop-only FastAPI + Ollama service, see gateway/README.md)
+gateway/.venv/
+gateway/.ruff_cache/
+gateway/.mypy_cache/
