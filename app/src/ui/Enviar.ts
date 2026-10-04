@@ -1,4 +1,11 @@
-import { requestSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
+import {
+  normalizeServiceUrl,
+  requestSentence,
+  sendSms,
+  SMS_SEND_ENABLED,
+  SMS_SERVICE_ENABLED,
+  SmsResponse,
+} from "../adapters/smsService";
 import { storage } from "../adapters/storage";
 import { countLeaves } from "../domain/sample";
 import { buildSmsRequest, CodePart, codeParts, composeSms } from "../domain/sms";
@@ -26,26 +33,34 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     link.href = `sms:${app.techNumber.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(sms)}`;
   };
 
-  const showSentence = (text: string | null) => {
-    sms = composeSms(code, text);
+  const showSentence = (response: SmsResponse | null) => {
+    sms = composeSms(code, response?.text);
     const used = sms !== code;
     sentenceBox.textContent = used ? sms.slice(code.length + 1) : "";
-    sentenceLabel.textContent = app.t(used ? "sentenceAi" : "sentenceNone");
+    // Se dice de dónde salió la frase: del modelo o de la plantilla fija del servidor.
+    sentenceLabel.textContent = app.t(!used ? "sentenceNone" : response?.source === "llm" ? "sentenceAi" : "sentenceTemplate");
     setLink();
   };
 
+  let asked = 0;
   const askSentence = async () => {
+    const turn = ++asked;
+    // Mientras llega la respuesta el mensaje es solo el código: lo que se ve es lo que se envía.
+    sms = code;
+    setLink();
     sentenceBox.textContent = "";
     sentenceLabel.textContent = app.t("sentenceAsking");
     const response = await requestSentence(app.serviceUrl, request);
-    app.sentence = { code, text: response?.text ?? null };
+    // Si entretanto se pidió otra vez (cambió la dirección), vale la última petición.
+    if (turn !== asked) return;
+    app.sentence = { code, response };
     // Si mientras tanto cambió la pantalla, estos nodos ya no están a la vista y no pasa nada.
-    showSentence(app.sentence.text);
+    showSentence(response);
   };
 
   setLink();
   if (SMS_SERVICE_ENABLED) {
-    if (app.sentence?.code === code) showSentence(app.sentence.text);
+    if (app.sentence?.code === code) showSentence(app.sentence.response);
     else void askSentence();
   }
 
@@ -58,8 +73,9 @@ export function renderEnviar(root: HTMLElement, app: App): void {
 
   const server = el("input", { type: "url", value: app.serviceUrl, placeholder: "http://192.168.43.1:8000" });
   server.onchange = () => {
-    app.serviceUrl = server.value;
-    void storage.saveServiceUrl(server.value);
+    // Se guarda como se va a llamar: "192.168.43.1:8000" pasa a llevar http:// delante.
+    server.value = app.serviceUrl = normalizeServiceUrl(server.value);
+    void storage.saveServiceUrl(app.serviceUrl);
     void askSentence();
   };
   const retry = el("button", { type: "button" }, icon("refresh"), app.t("sentenceRetry"));
@@ -91,7 +107,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     sendButton.disabled = true;
     delete sendStatus.dataset.state;
     sendStatus.textContent = app.t("sending");
-    const status = await sendSms(app.serviceUrl, code, sms === code ? null : sms.slice(code.length + 1));
+    const status = await sendSms(code, sms === code ? null : sms.slice(code.length + 1));
     sendButton.disabled = status === "queued";
     // El punto de .status late solo mientras se envía; al terminar queda fijo o, si no salió, en aviso.
     sendStatus.dataset.state = status === "queued" ? "done" : "fail";
@@ -126,6 +142,8 @@ export function renderEnviar(root: HTMLElement, app: App): void {
         {},
         el("summary", {}, app.t("laptopSummary")),
         el("label", {}, app.t("serverLabel"), server),
+        // Las dos cosas por las que la laptop no contesta aunque esté encendida.
+        el("p", { class: "hint" }, app.t("laptopHint", { origin: location.origin })),
         retry,
       ),
     );

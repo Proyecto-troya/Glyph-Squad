@@ -134,12 +134,15 @@ An SMS cannot look at a leaf. What an SMS can do, we leave to SMS.
 - Photos and counts stay on the phone. The SMS carries a plot code and counts only.
 - The Quechua is labelled on screen as a machine translation that no speaker has validated.
 
-A sentence for the technician written by a language model is built but switched off
-(`SMS_SERVICE_ENABLED` in `app/src/adapters/smsService.ts`): the SMS carries only the code,
-which the app always builds itself. When it is switched on, the sentence comes from the
-laptop gateway described below (`gateway/`, `POST /api/sms`): the model runs on the laptop,
-never on the phone, the server validates every sentence against the counts and falls back to
-a fixed template, and the phone sends the code alone whenever the laptop does not answer.
+Under the code, the SMS can carry one sentence for the technician (`SMS_SERVICE_ENABLED` in
+`app/src/adapters/smsService.ts`, switched on). The code itself is always built by the app.
+With the laptop's address set on the Enviar screen ("Laptop que redacta la frase"), the
+sentence comes from the laptop gateway described below (`gateway/`, `POST /api/sms`): the
+model runs on the laptop, never on the phone, and the server validates every sentence against
+the counts and falls back to a fixed template. With no address, the server that serves the
+app answers with its own fixed template (`api/sms.js`). The screen says whether the sentence
+was written by the model or comes from a template, and the phone sends the code alone
+whenever nobody answers within 10 seconds.
 
 ## Results
 
@@ -268,6 +271,14 @@ uv sync --frozen                       # pinned dependencies, install while onli
 cp .env.example .env                   # set GATEWAY_TOKEN and the laptop's LAN IP
 set -a; source .env; set +a; python -m gateway
 ```
+
+To use it from the app: run the gateway with `GATEWAY_PORT=8000` and the app's address in
+`GATEWAY_ALLOWED_ORIGINS` (the Enviar screen shows the exact value), then type the laptop's
+address under "Laptop que redacta la frase". Only the sentence comes from the laptop; the
+SMS is still sent by the server that serves the app, or by the phone's own SIM. From the
+https deployment, Chrome lets the page call the laptop only after the site is granted its
+local-network permission (checked with desktop Chrome 154: the call fails without the
+permission and works with it; not yet tried on the Android phone).
 
 Setup of the Ollama server, the protocol, every action with an example, the SMS validation
 rules, the tests (244) and the live checks are in [gateway/README.md](gateway/README.md).

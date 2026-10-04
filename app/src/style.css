@@ -618,6 +618,8 @@ details {
 summary { display: flex; align-items: center; min-height: 54px; color: var(--muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; }
 details[open] { padding-bottom: 18px; }
 details > button { width: 100%; }
+/* La dirección de la app dentro del aviso no tiene espacios: que parta donde haga falta. */
+details > .hint { overflow-wrap: anywhere; }
 
 /* ---------- Técnico ---------- */
 

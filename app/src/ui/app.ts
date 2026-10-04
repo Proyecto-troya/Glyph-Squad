@@ -1,5 +1,6 @@
 import { Classifier } from "../adapters/classifier";
 import { QualityReport, RejectReason } from "../adapters/photoQuality";
+import { SmsResponse } from "../adapters/smsService";
 import { TextKey } from "../domain/i18n";
 import { Lang, MessageCatalog } from "../domain/message";
 import { ClassProb, LeafResult, Sample } from "../domain/sample";
@@ -24,10 +25,10 @@ export interface App {
   /** Solo en el repintado que sigue a una foto: anima la entrada del resultado y de la hoja nueva. */
   fresh: boolean;
   techNumber: string;
-  /** Dirección del servidor de la laptop; vacío = el mismo servidor que sirve la app. */
+  /** Dirección de la laptop que redacta la frase (su gateway); vacío = el mismo servidor que sirve la app. */
   serviceUrl: string;
-  /** Frase del LLM ya recibida para un código, para no pedirla en cada repintado. */
-  sentence: { code: string; text: string | null } | null;
+  /** Respuesta ya recibida para un código (null = sin frase), para no pedirla en cada repintado. */
+  sentence: { code: string; response: SmsResponse | null } | null;
   /** Códigos pegados en la lista del técnico: se conservan al cambiar de idioma o de vista. */
   techText: string;
   catalog: MessageCatalog;

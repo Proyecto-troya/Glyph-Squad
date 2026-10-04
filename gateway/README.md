@@ -109,9 +109,12 @@ or files outside this repository:
 
 1. Run the LAN checks from a **physically separate device** on the demo hotspot (all live
    checks so far ran from the laptop to its own LAN IP).
-2. In the app, set `app.serviceUrl` to the laptop and flip `SMS_SERVICE_ENABLED`
-   (`app/src/adapters/smsService.ts`), then test from a **real browser** so CORS is exercised
-   end to end. List the app's origin in `GATEWAY_ALLOWED_ORIGINS`.
+2. The app side is done (2026-10-04): `SMS_SERVICE_ENABLED` is on and the laptop's address
+   is typed on the Enviar screen ("Laptop que redacta la frase"). It was checked in a real
+   browser (desktop Chrome 154) against this gateway with a stand-in for Ollama: CORS, the
+   model path, the fallback path and the gateway switched off. Still to do on the demo
+   laptop: list the app's origin in `GATEWAY_ALLOWED_ORIGINS` and repeat from the phone with
+   the real model.
 3. PLAN.md already describes this service (section 2, "Servicio LLM"); the root README's
    guardrails paragraph now points here. Nothing to change in the plan.
 4. Set **`OLLAMA_CONTEXT_LENGTH`** for the translation prompts (currently unset; gemma4
@@ -463,12 +466,14 @@ server before anyone sees it, so it is a plain HTTP call rather than the `/ws` t
 stream. It is served by the same process and port as `/ws`; the plan puts it on `:8000`
 (`GATEWAY_PORT=8000`).
 
-**How it fits the app.** `app/src/adapters/smsService.ts` already has the client
-(`requestSentence`, switched off by `SMS_SERVICE_ENABLED`) and `app/src/domain/sms.ts`
-builds exactly this request. The Enviar screen posts to `app.serviceUrl`, so point it at
-`http://<laptop-ip>:8000` and flip the flag. The app keeps the code-only SMS as default and
-sends it alone when the laptop does not answer within 10 s. `api/sms.js` on Vercel is the
-online stand-in with the same contract.
+**How it fits the app.** `app/src/adapters/smsService.ts` has the client
+(`requestSentence`, switched on by `SMS_SERVICE_ENABLED`) and `app/src/domain/sms.ts`
+builds exactly this request. The Enviar screen posts to `app.serviceUrl`: type
+`http://<laptop-ip>:8000` under "Laptop que redacta la frase". The app labels the sentence
+by its `source` (model or template) and sends the code alone when the laptop does not answer
+within 10 s. With no address it asks the server that serves it: `api/sms.js` on Vercel is
+the online stand-in with the same contract. Sending the SMS (`POST /api/send`) never goes
+through this gateway.
 
 **Auth.** The plan defines no token for this call and the app's client sends none, so
 `/api/sms` accepts requests without `X-Gateway-Token` by default. Set

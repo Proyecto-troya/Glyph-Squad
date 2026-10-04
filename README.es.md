@@ -138,9 +138,14 @@ Un SMS no puede mirar una hoja. Lo que un SMS sí puede hacer, se lo dejamos al 
 - Las fotos y el conteo se quedan en el teléfono. El SMS lleva solo código de parcela y conteos.
 - El quechua está rotulado en pantalla como traducción automática sin validar por hablante.
 
-La frase para el técnico redactada por un modelo de lenguaje está preparada pero apagada
-(`SMS_SERVICE_ENABLED` en `app/src/adapters/smsService.ts`): el SMS lleva solo el código, que
-siempre arma la app.
+Debajo del código, el SMS puede llevar una frase para el técnico (`SMS_SERVICE_ENABLED` en
+`app/src/adapters/smsService.ts`, encendido). El código lo arma siempre la app. Con la
+dirección de la laptop puesta en la pantalla Enviar ("Laptop que redacta la frase"), la frase
+viene del gateway de la laptop (`gateway/`, `POST /api/sms`): el modelo corre en la laptop,
+nunca en el teléfono, y el servidor valida cada frase contra los conteos y, si falla, usa una
+plantilla fija. Sin dirección, responde con su propia plantilla fija el servidor que sirve la
+app (`api/sms.js`). La pantalla dice si la frase la redactó el modelo o es de plantilla, y el
+teléfono envía solo el código cuando nadie responde en 10 segundos.
 
 ## Resultados
 
