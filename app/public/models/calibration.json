@@ -1,0 +1,28 @@
+{
+  "model": "leaf-fp32.onnx",
+  "labels": [
+    "sana",
+    "roya",
+    "minador",
+    "cercospora",
+    "phoma"
+  ],
+  "temperature": 0.735,
+  "threshold": 0.6057,
+  "inputSize": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "val": {
+    "n": 201,
+    "acceptedPrecision": 0.9,
+    "coverage": 0.8955
+  }
+}

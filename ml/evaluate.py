@@ -13,7 +13,7 @@ import json
 
 import numpy as np
 
-from common import APP_MODELS, DATA_DIR, LABELS, ML_DIR, OUT_DIR, UNKNOWN, predict_logits, read_manifest, softmax
+from common import APP_MODELS, DATA_DIR, LABELS, ML_DIR, OUT_DIR, UNKNOWN, app_model, predict_logits, readable, read_manifest, softmax
 
 GOLDEN_DIR = ML_DIR.parent / "tests" / "golden"
 
@@ -45,17 +45,17 @@ def pct(value):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default=str(APP_MODELS / "leaf-int8.onnx"))
+    parser.add_argument("--model", default=str(app_model()))
     args = parser.parse_args()
     calibration = json.loads((APP_MODELS / "calibration.json").read_text(encoding="utf-8"))
     results = {"model": args.model, "calibration": calibration}
-    lines = ["# Resultados (modelo int8, el que va al teléfono)", "", "| Medida | Dónde | Resultado |", "|---|---|---|"]
+    lines = [f"# Resultados ({calibration['model']}, el archivo que va al teléfono)", "", "| Medida | Dónde | Resultado |", "|---|---|---|"]
 
     test = score(args.model, calibration, read_manifest(fuente="bracol", particion="test"))
     results["bracolTest"] = test
     lines.append(f"| Precisión 5 clases | BRACOL test, {test['n']} hojas | {pct(test['accuracy'])} |")
 
-    e1_rows = [r for r in read_manifest(fuente="saposoa") if r["etiqueta"] in ("sana", "roya")]
+    e1_rows = readable([r for r in read_manifest(fuente="saposoa") if r["etiqueta"] in ("sana", "roya")])
     if e1_rows:
         e1 = score(args.model, calibration, e1_rows)
         results["e1Saposoa"] = e1
@@ -64,7 +64,7 @@ def main():
             f"(aceptadas: {pct(e1['acceptedAccuracy'])} con cobertura {pct(e1['coverage'])}) |"
         )
 
-    unknown_rows = read_manifest(fuente="saposoa", etiqueta=UNKNOWN)
+    unknown_rows = readable(read_manifest(fuente="saposoa", etiqueta=UNKNOWN))
     if unknown_rows:
         _, final = predict(args.model, calibration, [DATA_DIR / r["ruta"] for r in unknown_rows])
         results["abstentionUnknown"] = {"n": len(unknown_rows), "abstained": float((final == "duda").mean())}

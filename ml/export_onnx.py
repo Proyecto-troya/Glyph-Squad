@@ -1,7 +1,8 @@
 """Exporta ml/out/model.pt a ONNX (opset 17) y lo cuantiza a int8 estático con ~200
 imágenes de validación. Deja leaf-int8.onnx en app/public/models/.
 
-Si int8 pierde demasiada precisión (plan B), usar --no-quantize y reportar el tamaño real.
+Si int8 pierde demasiada precisión (plan B), usar --no-quantize: deja leaf-fp32.onnx
+y hay que reportar el tamaño real.
 """
 import argparse
 import shutil
@@ -43,7 +44,9 @@ def main():
     )
 
     APP_MODELS.mkdir(parents=True, exist_ok=True)
-    target = APP_MODELS / "leaf-int8.onnx"
+    for old in APP_MODELS.glob("*.onnx"):
+        old.unlink()
+    target = APP_MODELS / ("leaf-fp32.onnx" if args.no_quantize else "leaf-int8.onnx")
     if args.no_quantize:
         shutil.copy(fp32, target)
     else:
@@ -62,7 +65,7 @@ def main():
 
     for path in (fp32, target):
         print(f"{path}  {path.stat().st_size / 1024 / 1024:.2f} MB")
-    print("Siguiente: python ml/calibrate.py && python ml/evaluate.py (sobre el archivo int8)")
+    print("Siguiente: python ml/calibrate.py && python ml/evaluate.py (miden el archivo que carga la app)")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import { audioClips, Lang, MessageCatalog, MessageRef, renderMessage } from "../domain/message";
 import { playClips } from "../adapters/audio";
+import { icon, IconName } from "./icons";
 
 type Child = Node | string | null | false | undefined;
 
@@ -29,12 +30,26 @@ export const LABEL_NAMES: Record<string, string> = {
 };
 
 function listenButton(lang: Lang, ref: MessageRef): HTMLButtonElement {
-  const button = el("button", { class: "listen", type: "button" }, lang === "es" ? "🔊 Español" : "🔊 Quechua");
+  const button = el("button", { class: "listen", type: "button" }, icon("volume"), lang === "es" ? "Español" : "Quechua");
   button.onclick = async () => {
     const ok = await playClips(lang, audioClips(ref));
     if (!ok) button.textContent = "Audio no disponible";
   };
   return button;
+}
+
+/** Pantalla sin muestra todavía: explica qué falta y lleva a la pestaña Muestra. */
+export function emptyState(title: string, iconName: IconName, goToSample: () => void): HTMLElement {
+  const start = el("button", { class: "primary", type: "button" }, "Ir a Muestra", icon("arrow"));
+  start.onclick = goToSample;
+  return el(
+    "div",
+    { class: "empty" },
+    el("div", { class: "hero" }, icon(iconName)),
+    el("h1", {}, title),
+    el("p", {}, "Todavía no hay hojas en la muestra."),
+    start,
+  );
 }
 
 /** Mensaje fijo en español con el quechua al lado, rotulado, y un botón de audio por idioma. */

@@ -5,16 +5,17 @@ import { storage } from "./adapters/storage";
 import { MessageCatalog } from "./domain/message";
 import { App, Route } from "./ui/app";
 import { el } from "./ui/dom";
+import { icon, IconName } from "./ui/icons";
 import { renderEnviar } from "./ui/Enviar";
 import { renderMuestra } from "./ui/Muestra";
 import { renderResultado } from "./ui/Resultado";
 import { renderTecnico } from "./ui/Tecnico";
 
-const ROUTES: Record<Route, string> = {
-  muestra: "Muestra",
-  resultado: "Resultado",
-  enviar: "Enviar",
-  tecnico: "Técnico",
+const ROUTES: Record<Route, { name: string; icon: IconName }> = {
+  muestra: { name: "Muestra", icon: "leaf" },
+  resultado: { name: "Resultado", icon: "chart" },
+  enviar: { name: "Enviar", icon: "send" },
+  tecnico: { name: "Técnico", icon: "list" },
 };
 
 function currentRoute(): Route {
@@ -24,17 +25,20 @@ function currentRoute(): Route {
 
 async function start(): Promise<void> {
   const root = document.getElementById("app")!;
-  const [catalog, classifier, sample, techNumber] = await Promise.all([
+  const [catalog, classifier, sample, techNumber, serviceUrl] = await Promise.all([
     fetch("data/messages.json").then((r) => r.json() as Promise<MessageCatalog>),
     loadClassifier(),
     storage.loadCurrent(),
     storage.loadTechNumber(),
+    storage.loadServiceUrl(),
   ]);
 
   const app: App = {
     sample,
     last: null,
     techNumber,
+    serviceUrl,
+    sentence: null,
     catalog,
     classifier,
     update(next) {
@@ -54,14 +58,26 @@ async function start(): Promise<void> {
       else if (route === "enviar") renderEnviar(main, app);
       else renderTecnico(main);
 
+      const header = el(
+        "header",
+        { class: "appbar" },
+        el("span", { class: "brand" }, el("span", { class: "brand-mark" }, icon("leaf")), "Leaf Plate"),
+      );
       const nav = el("nav", {});
-      for (const [key, name] of Object.entries(ROUTES)) {
-        nav.append(el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, name));
+      for (const [key, tab] of Object.entries(ROUTES)) {
+        const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), tab.name);
+        if (key === route) link.setAttribute("aria-current", "page");
+        nav.append(link);
       }
-      root.replaceChildren(main, nav);
+      root.replaceChildren(header, main, nav);
       if (classifier.kind === "fake") {
-        root.prepend(
-          el("p", { class: "banner" }, "MODO DEMOSTRACIÓN: no hay modelo cargado; las clases son inventadas."),
+        header.after(
+          el(
+            "p",
+            { class: "banner" },
+            icon("alert"),
+            "MODO DEMOSTRACIÓN: no hay modelo cargado; las clases son inventadas.",
+          ),
         );
       }
     },
