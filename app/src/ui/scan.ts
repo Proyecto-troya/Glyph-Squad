@@ -8,6 +8,7 @@ import { photoRejected } from "../domain/message";
 import { ClassProb } from "../domain/sample";
 import { App, LastPhoto } from "./app";
 import { el, LABEL_KEYS, messageCard } from "./dom";
+import { classIcon } from "./icons";
 
 /** Por dónde va el análisis: midiendo la foto, clasificando, terminado o para repetir. */
 type ScanPhase = "measuring" | "classifying" | "done" | "retry";
@@ -178,7 +179,17 @@ export function scanResult(app: App, last: LastPhoto): HTMLElement {
   const { leaf, quality, alternatives } = last;
   if (leaf.quality === "repetir") {
     const card = scanCard(app, "retry", last.photoUrl, scanSteps(app, "retry", quality));
-    card.append(el("h2", { class: "scan-title" }, app.t("retake")), messageCard(photoRejected(), app), scanMeta(app));
+    card.append(
+      el("h2", { class: "scan-title" }, app.t("retake")),
+      messageCard(photoRejected(), app),
+      el(
+        "figure",
+        { class: "scan-guide" },
+        el("img", { src: "guia-foto-correcta.svg", alt: app.t("guideAlt") }),
+        el("figcaption", {}, app.t("guideCaption")),
+      ),
+      scanMeta(app),
+    );
     return card;
   }
   const unsure = leaf.label === "duda";
@@ -188,7 +199,7 @@ export function scanResult(app: App, last: LastPhoto): HTMLElement {
     el(
       "div",
       { class: `result-head tone-${leaf.label}` },
-      el("span", { class: "dot" }),
+      classIcon(leaf.label),
       el("h2", {}, app.t(LABEL_KEYS[leaf.label])),
     ),
     meter(app, leaf.confidence),

@@ -2,7 +2,7 @@ import { chooseMessages } from "../domain/message";
 import { countLeaves, LEAF_LABELS, sickCount, sickPct } from "../domain/sample";
 import { App } from "./app";
 import { el, emptyState, LABEL_KEYS, messageCard, sampleMap } from "./dom";
-import { icon } from "./icons";
+import { classIcon, icon } from "./icons";
 
 export function renderResultado(root: HTMLElement, app: App): void {
   const sample = app.sample;
@@ -31,7 +31,7 @@ export function renderResultado(root: HTMLElement, app: App): void {
       el(
         "div",
         { class: `count-row tone-${label}` },
-        el("span", { class: "dot" }),
+        classIcon(label),
         el("span", { class: "count-name" }, app.t(LABEL_KEYS[label])),
         el("div", { class: "bar" }, fill),
         el("strong", {}, String(counts[label])),

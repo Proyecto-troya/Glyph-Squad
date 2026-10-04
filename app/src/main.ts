@@ -6,7 +6,7 @@ import { DEFAULT_LANG, isLang, LANG_INFO, LANGS, TextKey, translate } from "./do
 import { MessageCatalog } from "./domain/message";
 import { App, Route } from "./ui/app";
 import { el } from "./ui/dom";
-import { icon, IconName } from "./ui/icons";
+import { brandLogo, icon, IconName } from "./ui/icons";
 import { renderEnviar } from "./ui/Enviar";
 import { renderMuestra } from "./ui/Muestra";
 import { renderResultado } from "./ui/Resultado";
@@ -90,9 +90,9 @@ async function start(): Promise<void> {
       const header = el(
         "header",
         { class: "appbar" },
-        el("span", { class: "brand" }, el("span", { class: "brand-mark" }, icon("leaf")), "Leaf Plate"),
+        el("span", { class: "brand" }, brandLogo(), "Leaf Plate"),
         // Con el clasificador de mentira ya avisa la franja de demostración.
-        classifier.kind === "onnx" && el("span", { class: "ai-status" }, el("span", { class: "ai-dot" }), app.t("aiLocal")),
+        classifier.kind === "onnx" && el("span", { class: "ai-status" }, icon("local-ai"), app.t("aiLocal")),
       );
       // En su propia fila: en la barra, junto a la marca y al indicador de IA, no cabe a ancho de teléfono.
       const langRow = el("div", { class: "lang-row" }, languageSwitch(app));

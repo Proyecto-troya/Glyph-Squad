@@ -118,7 +118,8 @@ function renderPlotForm(root: HTMLElement, app: App): void {
     el(
       "div",
       { class: "intro" },
-      el("div", { class: "hero" }, icon("leaf")),
+      // La marca a color ya trae su plato.
+      el("img", { class: "brand-hero", src: "logo-marca.svg", alt: "" }),
       el("h1", {}, app.t("newSample")),
       el("p", {}, app.t("newSampleIntro", { total: TARGET_LEAVES })),
     ),
@@ -135,6 +136,12 @@ function renderPlotForm(root: HTMLElement, app: App): void {
       el("li", {}, app.t("step1")),
       el("li", {}, app.t("step2")),
       el("li", {}, app.t("step3")),
+    ),
+    el(
+      "figure",
+      { class: "guide" },
+      el("img", { src: "muestreo-plantas.svg", alt: app.t("samplingAlt") }),
+      el("figcaption", {}, app.t("samplingCaption")),
     ),
   );
   form.onsubmit = (event) => {
