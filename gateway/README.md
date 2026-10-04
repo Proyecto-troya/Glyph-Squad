@@ -12,6 +12,77 @@ not a target. Python 3.11+, Pydantic v2, httpx, uvicorn.
 
 ---
 
+## 0. What's included
+
+Branch `feature/endpoint_ollama`. Everything below lives under `gateway/`.
+
+### Package `src/gateway/` (2.8k lines, every file under 500)
+
+| Layer | Files | What they do |
+|---|---|---|
+| `config/` | `settings.py` | pydantic-settings model, env only (`GATEWAY_*`), IP-literal validation, CSV lists, default action allowlist |
+| `protocol/` | `envelope.py`, `errors.py`, `usage.py`, `export_schemas.py`, `payloads/` (`common`, `generate`, `chat`, `embed`, `systemone`, `create`, `lifecycle`, `models`) | Strict request envelope and response frames, the 13 error codes, one Pydantic v2 payload model per action, JSON Schema export |
+| `ollama/` | `client.py`, `httpx_client.py`, `ndjson.py`, `aggregate.py`, `errors.py`, `version.py`, `cache.py` | `OllamaClient` Protocol, httpx adapter (JSON, NDJSON streams, HEAD, streamed uploads), mid-stream error detection, chunk → result aggregation, HTTP status map, version gates, TTL cache for `/api/version`, `/api/show`, `/api/tags` |
+| `security/` | `auth.py`, `origin.py`, `limits.py`, `cloud_guard.py`, `routing.py` | Token via header or subprotocol, origin allowlist, text/image size caps, cloud-model guard from `/api/tags`, decision-model routing, `think` validation, systemone version and image gates |
+| `actions/` | `base.py`, `registry.py`, `_streaming.py`, `_models.py`, `_internet.py`, and one module per action | `generate`, `chat`, `load`, `unload`, `embed`, `systemone`, `list`, `ps`, `show`, `version`, `create`, `blob_exists`, `blob_upload`, `copy`, `delete`, `pull`, `push`, `ping` (18 actions) |
+| `transport/` | `ws.py`, `session.py`, `runtime.py` | `/ws` route, handshake checks, per-socket `Session` (concurrent ids, cancel, timeout, limits, request log), the `Executor` contract that keeps the transport Ollama-free |
+| root | `main.py`, `__main__.py` | `create_app(settings, client, registry)` composition root with startup version probe; `python -m gateway` runs uvicorn with TLS, `ws_max_size` and ping settings from env |
+
+### Examples `examples/` (one per use case)
+
+`_client.py` (shared `GatewayClient` over `websockets`, injectable transport for tests),
+`translation_draft.py`, `back_translation_check.py`, `similarity_signal.py`,
+`bulk_drafts.py`, `demo_warmup.py`, `ops_panel.py`. Section 5 describes each.
+
+### Tests `tests/` (201 collected)
+
+| Suite | Count | Covers |
+|---|---|---|
+| `unit/` | 163 | Envelope validation; every payload model (think, images, systemone bounds, GGUF + `quantize`, digests); NDJSON, aggregators, error map incl. 503; version gates at 0.34.x / 0.35.0 / 0.35.1; cache TTL; httpx adapter via `MockTransport`; auth, origin, limits, cloud guard, routing; every action's request and response mapping incl. blob path traversal; settings; schema drift; repo rules (no hostnames, files under 500 lines, `app/src` never touches the gateway) |
+| `transport/` | 16 | TestClient WebSocket: auth failure (4401), subprotocol auth, origin (4403), envelope errors keep the id, unknown/disabled actions, streaming order with a single `result`, cancel mid-stream closes upstream, unknown-id cancel ignored, concurrent ids, duplicate id, concurrency cap, timeout, mid-stream error line, upstream down, cloud model rejected, oversize and image size limits, tool-loop round trip with `thinking` and `tool_name` |
+| `contract/` | 4 | Every `operationId` in `docs/openapi.yaml` is registered or in the explicit out-of-scope list; the registry claims nothing the spec lacks |
+| `examples/` | 9 | Each example against the fake Ollama through the real transport, plus interleaved ids and cancel in the client |
+| `integration/` | 9 | Real Ollama at `127.0.0.1:11434` (marker `integration`, skips when unreachable): version, list/ps, chat stream + cancel, structured drafts, unit-length embeddings, cloud model blocked, decision model rejected for chat, systemone choice probabilities, warm-up/unload |
+
+Shared fixtures: `tests/fakes.py` (programmable `FakeOllamaClient` with canned answers,
+scripted streams, delays, failures) and `tests/helpers.py`.
+
+### Docs, schemas, config
+
+- `docs/openapi.yaml`: the official spec vendored verbatim on 2026-10-03 (source of truth for the contract test and the payload models).
+- `schemas/`: 20 JSON Schema files (18 payloads + request and response envelopes), regenerated with `python -m gateway.protocol.export_schemas` and checked by a test.
+- `.env.example`: every `GATEWAY_*` variable with a comment, no secrets.
+- `pyproject.toml` + `uv.lock`: pinned dependencies (FastAPI, uvicorn, websockets, Pydantic v2, pydantic-settings, httpx; dev: pytest, pytest-asyncio, pytest-timeout, ruff, mypy, PyYAML). Ruff and mypy strict configs live here too.
+- This README, and a laptop-only note in the repository root README.
+
+### Laptop state this was verified on (2026-10-03)
+
+- Ollama.app **v0.35.1**, started with `OLLAMA_NO_CLOUD=1`, `OLLAMA_KEEP_ALIVE=-1`,
+  `OLLAMA_MODELS=/Volumes/Expansion/repos/ollama-models`, plus `~/.ollama/server.json`
+  with `disable_ollama_cloud: true`. Log line confirmed: `Ollama cloud disabled: true`.
+- Models installed: `gemma4:e2b` (chat, 4.6 GB), `embeddinggemma` (0.6 GB), `nimble`
+  (decision, 9.5 GB).
+- Tool versions: Python 3.13.7, uv 0.7.19, FastAPI 0.142, Starlette 1.7, Pydantic 2.13,
+  httpx 0.28, uvicorn 0.54, websockets 17.2.
+- Gate at head: 201 tests collected, 192 pass offline against the fake and 9 pass live
+  against Ollama; `mypy --strict`, `ruff check` and `ruff format --check` clean.
+
+### Known behaviours found during verification
+
+- Ollama 0.35.1 answers **403** `ollama cloud is disabled: remote model is unavailable`
+  for cloud models that were never pulled. Mapped to `CLOUD_MODEL_BLOCKED` (section 1).
+- `gemma4:e2b` with `think: false` plus a JSON-schema `format` fell into a repetition
+  loop until the context filled (`done_reason: length`). The examples cap `num_predict`
+  at 512 and flag unparsable drafts with `ok: false` for human review.
+- The repository drive is exFAT. macOS writes AppleDouble `._*` files next to every file,
+  including inside `.git` (git prints `non-monotonic index`) and inside the Ollama models
+  folder (Ollama logs `bad manifest name`). They are metadata only. `.gitignore` excludes
+  them, the tests skip them, and this removes them when they pile up:
+  `find /Volumes/Expansion/repos/Glyph-Squad /Volumes/Expansion/repos/ollama-models -name '._*' -type f -delete`.
+  The uv venv lives on the internal disk for the same reason (section 2).
+
+---
+
 ## 1. Ollama server config (laptop)
 
 Set these before starting Ollama. On macOS with the menu-bar app, use `launchctl setenv`
