@@ -1,0 +1,23 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "destination": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Destination",
+      "type": "string"
+    },
+    "source": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source",
+    "destination"
+  ],
+  "title": "CopyPayload",
+  "type": "object"
+}

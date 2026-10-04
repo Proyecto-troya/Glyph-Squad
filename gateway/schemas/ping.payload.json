@@ -1,0 +1,7 @@
+{
+  "additionalProperties": false,
+  "description": "Client-initiated heartbeat; never touches Ollama.",
+  "properties": {},
+  "title": "PingPayload",
+  "type": "object"
+}

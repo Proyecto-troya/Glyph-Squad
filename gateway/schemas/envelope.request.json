@@ -1,0 +1,42 @@
+{
+  "additionalProperties": false,
+  "description": "Strict envelope. Unknown keys are rejected; types are not coerced.",
+  "properties": {
+    "action": {
+      "pattern": "^[a-z][a-z0-9_]{0,63}$",
+      "title": "Action",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "payload": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payload"
+    },
+    "v": {
+      "const": 1,
+      "title": "V",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "v",
+    "id",
+    "action"
+  ],
+  "title": "RequestEnvelope",
+  "type": "object"
+}

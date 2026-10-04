@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "ResponseType": {
+      "enum": [
+        "chunk",
+        "result",
+        "error"
+      ],
+      "title": "ResponseType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Shape of every frame the gateway sends. Exported as JSON Schema for clients.",
+  "properties": {
+    "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id"
+    },
+    "type": {
+      "$ref": "#/$defs/ResponseType"
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "data"
+  ],
+  "title": "ResponseEnvelope",
+  "type": "object"
+}

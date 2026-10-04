@@ -1,0 +1,17 @@
+{
+  "additionalProperties": false,
+  "description": "``file`` is a bare file name inside GATEWAY_IMPORT_DIR. No directories, no traversal.",
+  "properties": {
+    "file": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "File",
+      "type": "string"
+    }
+  },
+  "required": [
+    "file"
+  ],
+  "title": "BlobUploadPayload",
+  "type": "object"
+}

@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "description": "``keep_alive: -1`` keeps the model loaded until unloaded. Omitted uses the server default.",
+  "properties": {
+    "keep_alive": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Keep Alive"
+    },
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    }
+  },
+  "required": [
+    "model"
+  ],
+  "title": "LoadPayload",
+  "type": "object"
+}

@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    }
+  },
+  "required": [
+    "model"
+  ],
+  "title": "DeletePayload",
+  "type": "object"
+}

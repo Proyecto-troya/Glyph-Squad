@@ -136,7 +136,10 @@ An SMS cannot look at a leaf. What an SMS can do, we leave to SMS.
 
 A sentence for the technician written by a language model is built but switched off
 (`SMS_SERVICE_ENABLED` in `app/src/adapters/smsService.ts`): the SMS carries only the code,
-which the app always builds itself.
+which the app always builds itself. When it is switched on, the sentence comes from the
+laptop gateway described below (`gateway/`, `POST /api/sms`): the model runs on the laptop,
+never on the phone, the server validates every sentence against the counts and falls back to
+a fixed template, and the phone sends the code alone whenever the laptop does not answer.
 
 ## Results
 
@@ -170,6 +173,7 @@ the onnxruntime-web WASM.
 - [x] Four screens, in Spanish, Quechua (draft) and English
 - [x] The real model and the 78 audio clips, checked in Chrome against the deployment
 - [x] Server functions on Vercel for sending the SMS (Twilio or an Android phone gateway)
+- [x] Laptop gateway (FastAPI + Ollama 0.35.1, offline): `/ws` for the team's tools and `POST /api/sms` with validation and fallback, 244 tests, checked over the LAN
 - [ ] Offline mode verified on the Android phone (on the development laptop Chrome fails to cache the 14 MB WASM)
 - [ ] An SMS actually sent and received (the deployed server has no SMS credentials and answers `simulated`)
 - [ ] Quechua wording and pronunciation reviewed by a speaker
@@ -231,7 +235,8 @@ Production: https://leaf-plate-kappa.vercel.app (deployed with `npx vercel deplo
     mode; the SMS goes out through its SIM.
   - None: it answers `simulated` and sends nothing.
 - `POST /api/sms` returns the sentence for the technician: a fixed template, or an LLM if
-  `OLLAMA_URL` points to a reachable Ollama server.
+  `OLLAMA_URL` points to a reachable Ollama server. This is the online stand-in; the version
+  the plan describes runs on the demo laptop (next section).
 
 Secrets go in `.env`, at the project root, which is not committed to git. `npm run dev` and
 `npm run preview` serve `/api/*` using that file. `npm run secrets:check` asks Twilio whether
@@ -242,12 +247,38 @@ to the Vercel project without printing them, after which you need to redeploy.
 Sending through the server needs internet on the phone. The "Abrir SMS" button uses the
 phone's own SIM and is the only path that works without mobile data.
 
+### Laptop gateway (`gateway/`, FastAPI + Ollama, offline)
+
+The demo laptop runs a small FastAPI server in front of a local Ollama (v0.35.1, cloud
+features disabled) that reaches the phone over the hotspot by IP, with no internet. It is
+tooling for the team, never a dependency of the app: a unit test fails if `app/src` ever
+imports it or opens a WebSocket to it.
+
+- `POST /api/sms` on the laptop is the LLM sentence service from [PLAN.md](PLAN.md)
+  (`llama3.2:3b`, temperature 0, JSON output, 10 s limit, server-side validation, fixed
+  template fallback). It answers the same request and response the app's
+  `requestSentence` already sends.
+- `/ws` exposes every Ollama action (chat, generate, embed, System One, model management)
+  to the team's laptop tools: Quechua translation drafts, back-translation checks with a
+  decision model, embedding similarity, demo warm-up, an ops panel.
+
+```
+cd gateway
+uv sync --frozen                       # pinned dependencies, install while online
+cp .env.example .env                   # set GATEWAY_TOKEN and the laptop's LAN IP
+set -a; source .env; set +a; python -m gateway
+```
+
+Setup of the Ollama server, the protocol, every action with an example, the SMS validation
+rules, the tests (244) and the live checks are in [gateway/README.md](gateway/README.md).
+
 ### Repository layout
 
 ```
 ├─ app/            offline web app (Vite + TypeScript): domain rules, adapters, four screens
 │  └─ public/      model, calibration, fixed messages, audio clips, service worker
 ├─ api/            Vercel functions: send the SMS, optional sentence for the technician
+├─ gateway/        laptop-only FastAPI + Ollama gateway: /ws for the team's tools, /api/sms offline
 ├─ ml/             manifest, training, calibration, ONNX export, evaluation, audio rendering
 ├─ tests/          unit tests and the golden set of our own photos
 ├─ UI-UX-Modules/  design direction, components, brand, icons and prototype
