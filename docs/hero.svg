@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380" role="img" aria-label="Leaf Plate: a white plate with six coffee leaves, two with rust spots, and the SMS code the app sends">
+  <defs>
+    <g id="leaf">
+      <path d="M45 0 C88 45 92 135 45 200 C-2 135 2 45 45 0 Z" fill="#2e8b57"/>
+      <path d="M45 10 L45 190 M45 50 L70 38 M45 85 L76 72 M45 120 L74 110 M45 155 L64 148 M45 50 L20 38 M45 85 L14 72 M45 120 L16 110 M45 155 L26 148" stroke="#133f27" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.55"/>
+    </g>
+    <g id="rust" fill="#c25a14">
+      <circle cx="28" cy="70" r="7"/><circle cx="60" cy="95" r="8"/><circle cx="33" cy="125" r="6"/><circle cx="62" cy="140" r="5"/><circle cx="55" cy="58" r="5"/>
+    </g>
+  </defs>
+  <rect width="1200" height="380" rx="18" fill="#133f27"/>
+  <circle cx="960" cy="190" r="250" fill="none" stroke="#d4ecd9" stroke-width="2" opacity="0.18"/>
+  <circle cx="960" cy="190" r="210" fill="none" stroke="#d4ecd9" stroke-width="2" opacity="0.38"/>
+  <circle cx="960" cy="190" r="165" fill="#ffffff"/>
+  <circle cx="960" cy="190" r="128" fill="none" stroke="#e0f0e4" stroke-width="3"/>
+  <g transform="translate(872 92) scale(0.5) rotate(-6 45 100)"><use href="#leaf"/></g>
+  <g transform="translate(938 92) scale(0.5) rotate(4 45 100)"><use href="#leaf"/><use href="#rust"/></g>
+  <g transform="translate(1004 92) scale(0.5) rotate(-3 45 100)"><use href="#leaf"/></g>
+  <g transform="translate(872 192) scale(0.5) rotate(5 45 100)"><use href="#leaf"/><use href="#rust"/></g>
+  <g transform="translate(938 192) scale(0.5) rotate(-4 45 100)"><use href="#leaf"/></g>
+  <g transform="translate(1004 192) scale(0.5) rotate(3 45 100)"><use href="#leaf"/></g>
+  <!-- Team logo mark (UI-UX-Modules/assets/marca), inverse version -->
+  <g transform="translate(60 44) scale(0.9)">
+    <path d="M32 4a28 28 0 1 1 0 56a28 28 0 1 1 0 -56ZM32 6.5a25.5 25.5 0 1 1 0 51a25.5 25.5 0 1 1 0 -51ZM32 9a23 23 0 1 1 0 46a23 23 0 1 1 0 -46ZM32 10a22 22 0 1 1 0 44a22 22 0 1 1 0 -44Z" fill="#ffffff" fill-rule="evenodd"/>
+    <path d="M30.7 4H33.3V9H30.7ZM30.7 55H33.3V60H30.7ZM4 30.7H9V33.3H4ZM55 30.7H60V33.3H55Z" fill="#ffffff"/>
+    <path d="M32 11C29 18 18 23 18 34C18 43 26 46 30.5 50.5L30.5 53C30.5 55 33.5 55 33.5 53L33.5 50.5C38 46 46 43 46 34C46 23 35 18 32 11ZM32 28C26 29 24 33 24.5 38C25 43 28 46 31 48C29 43 29.3 39 31.2 35.5C32.5 33 32.8 30.5 32 28ZM34 28.8C39 31 40.5 35.5 38.8 40.3C37.5 44 34.7 46.5 32.8 47.8C34.3 43.6 33.9 40.9 33.3 38.3C32.4 34.5 35 32.2 34 28.8Z" fill="#d4ecd9" fill-rule="evenodd"/>
+  </g>
+  <text x="132" y="82" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="3" fill="#b9d4c2">SMALL AI FOR DEVELOPMENT · AGRICULTURE</text>
+  <text x="58" y="208" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="104" font-weight="800" fill="#ffffff">Leaf Plate</text>
+  <text x="62" y="256" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="25" fill="#d4ecd9">Name the leaf problem. Tell the technician. On her phone.</text>
+  <rect x="62" y="290" width="470" height="50" rx="25" fill="#d4ecd9"/>
+  <text x="86" y="322" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700" fill="#133f27">LP P114 30H ROYA7 CER1 DUDA2 E15+</text>
+</svg>
