@@ -4,11 +4,30 @@ A FastAPI WebSocket gateway in front of a **local** Ollama server. It exposes ev
 Ollama native API action to clients on the local network, by IP, fully offline.
 
 It is demo-laptop tooling: Quechua translation drafts, back-translation checks, and
-code/test help. **The phone app never imports this package and never opens a socket
-to it.** `tests/unit/test_repo_rules.py` fails if `app/src` ever does.
+code/test help. **The phone app never imports this package and never opens a WebSocket
+to it.** `tests/unit/test_repo_rules.py` fails if `app/src` ever does. The one sanctioned
+HTTP call is `POST /api/sms` (section 5b), always guarded by the app's code-only fallback.
 
 Tested with **Ollama v0.35.1** (latest stable, 2026-09-29). The v0.40 pre-release is
 not a target. Python 3.11+, Pydantic v2, httpx, uvicorn.
+
+### Server at a glance
+
+One FastAPI app (`gateway.main:create_app`), one uvicorn process, one port. **The server
+side is complete**; what remains is on the phone/app side (see "Open items").
+
+| Route | What it serves | Status (2026-10-04) |
+|---|---|---|
+| `/ws` (WebSocket) | All 18 Ollama actions: generate, chat, load, unload, embed, systemone, list, ps, show, version, create, blob_exists, blob_upload, copy, delete, pull, push, ping | Implemented; tested offline (fake Ollama) and live (Ollama 0.35.1 over the LAN IP, ws and wss) |
+| `POST /api/sms` | One validated Spanish sentence for the technician SMS, template fallback | Implemented; tested offline and live, model and fallback paths |
+| `OPTIONS /api/sms` (CORS) | Preflight for the phone's browser origin(s) in `GATEWAY_ALLOWED_ORIGINS` | Implemented; tested over http and https |
+| `/docs`, `/redoc`, `/openapi.json` | FastAPI's own docs pages | Disabled on purpose: they load from a CDN and the laptop is offline |
+
+Cross-cutting and in place on every route: token auth (header or subprotocol), origin
+allowlist, size and concurrency limits, cancel and timeouts, cloud-model blocking, version
+and model gates, request logging without prompts, TLS from env, startup that survives a
+down Ollama. Not built, per the task's out-of-scope list: OpenAI-compatible `/v1/*` other
+than systemone, Anthropic `/v1/messages`, web search and fetch, any cloud model path.
 
 ---
 
