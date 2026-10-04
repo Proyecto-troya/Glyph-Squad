@@ -1,0 +1,57 @@
+{
+  "quzLabel": "Quechua: traducción automática y voz sintética, sin validar por hablante",
+  "messages": {
+    "M01": {
+      "es": "No vimos hojas enfermas en las {total} hojas.",
+      "quz": "{total} raphikunapi manam unqusqa raphita rikuykuchu."
+    },
+    "M02": {
+      "es": "Roya: {n} de {total} hojas.",
+      "quz": "Roya: {total} raphimanta {n}."
+    },
+    "M03": {
+      "es": "Minador: {n} de {total} hojas.",
+      "quz": "Minador: {total} raphimanta {n}."
+    },
+    "M04": {
+      "es": "Cercospora: {n} de {total} hojas.",
+      "quz": "Cercospora: {total} raphimanta {n}."
+    },
+    "M05": {
+      "es": "Phoma: {n} de {total} hojas.",
+      "quz": "Phoma: {total} raphimanta {n}."
+    },
+    "M06": {
+      "es": "No estoy seguro de muchas hojas. El técnico debería verlas.",
+      "quz": "Achka raphimanta manam segurochu kani. Técnico qhawananmi."
+    },
+    "M07": {
+      "es": "La foto no salió bien. Pon una sola hoja sobre el plato, con luz, y repite la foto.",
+      "quz": "Fotoqa manam allinchu lluqsirqan. Huk raphillata platoman churay, k'anchaypi, hukmanta fotota hurquy."
+    },
+    "M08": {
+      "es": "Esto no es un diagnóstico. Envía el mensaje al técnico de la cooperativa; él decide.",
+      "quz": "Kayqa manam diagnósticochu. Cooperativapi técnicoman willakuyta apachiy; paymi decidinqa."
+    }
+  },
+  "say": {
+    "_nota": "Texto que se graba en cada clip. Los mensajes con conteo se oyen como: clip + número (n0–n30).",
+    "M01": { "es": "No vimos hojas enfermas.", "quz": "Manam unqusqa raphita rikuykuchu." },
+    "M02": { "es": "Hojas con señales de roya:", "quz": "Roya unquyniyuq raphikuna:" },
+    "M03": { "es": "Hojas con señales de minador:", "quz": "Minador unquyniyuq raphikuna:" },
+    "M04": { "es": "Hojas con señales de cercospora:", "quz": "Cercospora unquyniyuq raphikuna:" },
+    "M05": { "es": "Hojas con señales de phoma:", "quz": "Phoma unquyniyuq raphikuna:" },
+    "M06": {
+      "es": "No estoy seguro de muchas hojas. El técnico debería verlas.",
+      "quz": "Achka raphimanta manam segurochu kani. Técnico qhawananmi."
+    },
+    "M07": {
+      "es": "La foto no salió bien. Pon una sola hoja sobre el plato, con luz, y repite la foto.",
+      "quz": "Fotoqa manam allinchu lluqsirqan. Huk raphillata platoman churay, k'anchaypi, hukmanta fotota hurquy."
+    },
+    "M08": {
+      "es": "Esto no es un diagnóstico. Envía el mensaje al técnico de la cooperativa; él decide.",
+      "quz": "Kayqa manam diagnósticochu. Cooperativapi técnicoman willakuyta apachiy; paymi decidinqa."
+    }
+  }
+}

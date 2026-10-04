@@ -1,0 +1,11 @@
+{
+  "name": "Leaf Plate",
+  "short_name": "Leaf Plate",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfaf5",
+  "theme_color": "#1f6b3a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
