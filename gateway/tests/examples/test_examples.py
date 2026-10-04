@@ -48,9 +48,26 @@ def test_translation_draft_uses_schema_and_temperature_zero() -> None:
     sent = fake_client.last_body("/api/chat")
     assert sent["stream"] is False
     assert sent["format"] == DRAFT_SCHEMA
-    assert sent["options"] == {"temperature": 0}
+    assert sent["options"] == {"temperature": 0, "num_predict": 512}
     assert json.dumps(DRAFT_SCHEMA) in sent["messages"][1]["content"]
     assert json.dumps(DRAFT_SCHEMA) in sent["messages"][0]["content"]
+
+
+def test_translation_draft_flags_unparsable_output_instead_of_raising() -> None:
+    fake = FakeOllamaClient()
+    fake.on(
+        "POST",
+        "/api/chat",
+        200,
+        {
+            **DRAFT,
+            "done_reason": "length",
+            "message": {"role": "assistant", "content": '{"quz": "taqtaqtaq'},
+        },
+    )
+    with example_client(fake) as (client, _):
+        draft = draft_translation(client, "gemma4", "Riegue la planta")
+    assert not draft.ok and draft.quz == "" and "done_reason=length" in draft.notes
 
 
 def test_back_translation_check_threshold_and_review_band() -> None:

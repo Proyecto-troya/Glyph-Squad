@@ -10,7 +10,7 @@ import json
 import sys
 
 from examples._client import GatewayClient, connect, env_token, env_url
-from examples.translation_draft import TranslationDraft, build_payload
+from examples.translation_draft import TranslationDraft, build_payload, parse_draft
 
 
 def think_false_allowed(client: GatewayClient, model: str) -> bool:
@@ -26,10 +26,7 @@ def bulk_drafts(client: GatewayClient, model: str, phrases: list[str]) -> list[T
         payload = build_payload(model, phrase)
         if fast:
             payload["think"] = False
-        result = client.request("chat", payload)
-        content = json.loads(result["message"]["content"])
-        usage = {k: v for k, v in result.items() if k.endswith(("_count", "_duration"))}
-        drafts.append(TranslationDraft(str(content["quz"]), str(content.get("notes", "")), usage))
+        drafts.append(parse_draft(client.request("chat", payload)))
     return drafts
 
 
@@ -43,7 +40,10 @@ def main() -> None:
         drafts = bulk_drafts(client, args.model, phrases)
     for phrase, draft in zip(phrases, drafts, strict=True):
         print(
-            json.dumps({"es": phrase, "quz": draft.quz, "notes": draft.notes}, ensure_ascii=False)
+            json.dumps(
+                {"es": phrase, "quz": draft.quz, "notes": draft.notes, "ok": draft.ok},
+                ensure_ascii=False,
+            )
         )
 
 

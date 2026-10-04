@@ -31,11 +31,17 @@ SYSTEM = (
 )
 
 
+# A draft never needs more than this; it also stops a model that falls into a repetition
+# loop from running until the context window is full (seen with gemma4:e2b, think=false).
+MAX_DRAFT_TOKENS = 512
+
+
 @dataclass(frozen=True)
 class TranslationDraft:
     quz: str
     notes: str
     usage: dict[str, Any]
+    ok: bool = True  # False: the model output was not valid JSON; a person must look
 
 
 def build_payload(model: str, es_text: str) -> dict[str, Any]:
@@ -43,7 +49,7 @@ def build_payload(model: str, es_text: str) -> dict[str, Any]:
         "model": model,
         "stream": False,
         "format": DRAFT_SCHEMA,
-        "options": {"temperature": 0},
+        "options": {"temperature": 0, "num_predict": MAX_DRAFT_TOKENS},
         "messages": [
             {"role": "system", "content": SYSTEM},
             {
@@ -54,13 +60,26 @@ def build_payload(model: str, es_text: str) -> dict[str, Any]:
     }
 
 
-def draft_translation(client: GatewayClient, model: str, es_text: str) -> TranslationDraft:
-    result = client.request("chat", build_payload(model, es_text))
-    content = json.loads(result["message"]["content"])
+def parse_draft(result: dict[str, Any]) -> TranslationDraft:
+    """Turn a chat result into a draft. Unparsable output is flagged, never raised."""
     usage = {k: v for k, v in result.items() if k.endswith(("_count", "_duration"))}
-    return TranslationDraft(
-        quz=str(content["quz"]), notes=str(content.get("notes", "")), usage=usage
-    )
+    text = str(result.get("message", {}).get("content", ""))
+    try:
+        content = json.loads(text)
+        quz, notes = str(content["quz"]), str(content.get("notes", ""))
+    except (json.JSONDecodeError, KeyError, TypeError):
+        reason = result.get("done_reason", "unknown")
+        return TranslationDraft(
+            quz="",
+            notes=f"model output was not valid JSON (done_reason={reason}); needs human review",
+            usage=usage,
+            ok=False,
+        )
+    return TranslationDraft(quz=quz, notes=notes, usage=usage)
+
+
+def draft_translation(client: GatewayClient, model: str, es_text: str) -> TranslationDraft:
+    return parse_draft(client.request("chat", build_payload(model, es_text)))
 
 
 def main() -> None:
@@ -72,7 +91,7 @@ def main() -> None:
         draft = draft_translation(client, args.model, args.text)
     print(
         json.dumps(
-            {"quz": draft.quz, "notes": draft.notes, "usage": draft.usage},
+            {"quz": draft.quz, "notes": draft.notes, "ok": draft.ok, "usage": draft.usage},
             ensure_ascii=False,
             indent=2,
         )
