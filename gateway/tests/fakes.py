@@ -7,7 +7,12 @@ from collections.abc import AsyncIterator, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from gateway.ollama.client import UpstreamHTTPError, UpstreamResponse, UpstreamUnavailable
+from gateway.ollama.client import (
+    UpstreamHTTPError,
+    UpstreamResponse,
+    UpstreamStreamError,
+    UpstreamUnavailable,
+)
 
 Key = tuple[str, str]
 Responder = Callable[[dict[str, Any] | None], UpstreamResponse]
@@ -153,6 +158,8 @@ class FakeOllamaClient:
             )
         if (method, path) in {("POST", "/api/copy"), ("DELETE", "/api/delete")}:
             return UpstreamResponse(200, None)
+        if path in {"/api/pull", "/api/push", "/api/create"}:
+            return UpstreamResponse(200, {"status": "success"})
         return UpstreamResponse(404, {"error": f"no fake for {method} {path}"})
 
     def _default_stream(self, method: str, path: str, body: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -197,6 +204,9 @@ class FakeOllamaClient:
             for chunk in chunks:
                 if self.chunk_delay_s:
                     await asyncio.sleep(self.chunk_delay_s)
+                if chunk.get("error"):
+                    # Mirrors ndjson.parse_line: an error line ends the stream.
+                    raise UpstreamStreamError(str(chunk["error"]))
                 yield chunk
             finished = True
         finally:
