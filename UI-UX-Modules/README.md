@@ -9,7 +9,7 @@ pantallas, componentes, flujos y guías visuales antes (o en paralelo) de llevar
 | Pantalla | Archivo | Qué hace |
 |---|---|---|
 | Muestra | `app/src/ui/Muestra.ts` | Toma de fotos de las hojas y filtro de calidad. |
-| Resultado | `app/src/ui/Resultado.ts` | Conteo por clase y mensaje fijo para Noor. |
+| Resultado | `app/src/ui/Resultado.ts` | Conteo por clase y mensajes predefinidos según el conteo para Noor. |
 | Enviar | `app/src/ui/Enviar.ts` | Vista previa del SMS que ella pulsa enviar. |
 | Técnico | `app/src/ui/Tecnico.ts` | Lista de parcelas ordenada para el técnico. |
 
