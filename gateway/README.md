@@ -564,6 +564,19 @@ newer page wins. Gaps the models account for:
   drafts, and cloud models (`gpt-oss:120b-cloud`, `gemma4:31b-cloud`) answered with
   `CLOUD_MODEL_BLOCKED`. Repeat the same checks from a second device on the demo hotspot
   before the demo; only the network path differs.
+- Verified on 2026-10-04, same setup:
+  - **wss**: uvicorn with a self-signed certificate whose SAN is the LAN IP (`openssl req
+    -x509 ... -addext "subjectAltName=IP:<lan-ip>"`); TLS 1.3, subprotocol auth, a streamed
+    chat, `https://<ip>:8443/api/sms` and its CORS preflight all work. A client that does
+    not trust the certificate is refused, so install it on the phone or use `mkcert`.
+  - **Concurrency**: 5 sockets, 14 chat streams at once on `gemma4:e2b`. Every stream got
+    exactly one `result`; the two requests above the per-socket cap of 4 got
+    `UPSTREAM_BUSY` at once; Ollama (`OLLAMA_NUM_PARALLEL=1`) served the 12 in 74 s total.
+  - **Egress**: while under that load the gateway process held TCP connections only to
+    `127.0.0.1:11434` and its clients. Nothing else is dialled.
+  - **Ollama down and back**: with Ollama stopped, a running gateway answers
+    `UPSTREAM_UNAVAILABLE` (and `ping` still works), a fresh gateway boots with a warning,
+    `/api/sms` serves the fallback; after relaunching Ollama both recover with no restart.
 
 ---
 
