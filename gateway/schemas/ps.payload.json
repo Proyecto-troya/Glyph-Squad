@@ -1,0 +1,7 @@
+{
+  "additionalProperties": false,
+  "description": "GET /api/ps takes no fields.",
+  "properties": {},
+  "title": "PsPayload",
+  "type": "object"
+}

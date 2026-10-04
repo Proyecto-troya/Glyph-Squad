@@ -26,48 +26,108 @@ class RecordedCall:
 
 
 LOCAL_MODELS: list[dict[str, Any]] = [
-    {"name": "gemma4:latest", "model": "gemma4:latest", "size": 1, "digest": "d1",
-     "details": {"family": "gemma4", "families": ["gemma4"]}},
-    {"name": "qwen3:latest", "model": "qwen3:latest", "size": 1, "digest": "d2",
-     "details": {"family": "qwen3", "families": ["qwen3"]}},
-    {"name": "nimble:latest", "model": "nimble:latest", "size": 1, "digest": "d3",
-     "details": {"family": "nimble", "families": ["nimble"]}},
-    {"name": "clef-flash:latest", "model": "clef-flash:latest", "size": 1, "digest": "d4",
-     "details": {"family": "clef", "families": ["clef"]}},
-    {"name": "embeddinggemma:latest", "model": "embeddinggemma:latest", "size": 1,
-     "digest": "d5", "details": {"family": "gemma3", "families": ["gemma3"]}},
-    {"name": "gpt-oss:120b-cloud", "model": "gpt-oss:120b-cloud", "size": 0, "digest": "d6",
-     "remote_model": "gpt-oss:120b", "remote_host": "https://ollama.com:443",
-     "details": {"family": "gptoss", "families": ["gptoss"]}},
+    {
+        "name": "gemma4:latest",
+        "model": "gemma4:latest",
+        "size": 1,
+        "digest": "d1",
+        "details": {"family": "gemma4", "families": ["gemma4"]},
+    },
+    {
+        "name": "qwen3:latest",
+        "model": "qwen3:latest",
+        "size": 1,
+        "digest": "d2",
+        "details": {"family": "qwen3", "families": ["qwen3"]},
+    },
+    {
+        "name": "nimble:latest",
+        "model": "nimble:latest",
+        "size": 1,
+        "digest": "d3",
+        "details": {"family": "nimble", "families": ["nimble"]},
+    },
+    {
+        "name": "clef-flash:latest",
+        "model": "clef-flash:latest",
+        "size": 1,
+        "digest": "d4",
+        "details": {"family": "clef", "families": ["clef"]},
+    },
+    {
+        "name": "embeddinggemma:latest",
+        "model": "embeddinggemma:latest",
+        "size": 1,
+        "digest": "d5",
+        "details": {"family": "gemma3", "families": ["gemma3"]},
+    },
+    {
+        "name": "gpt-oss:120b-cloud",
+        "model": "gpt-oss:120b-cloud",
+        "size": 0,
+        "digest": "d6",
+        "remote_model": "gpt-oss:120b",
+        "remote_host": "https://ollama.com:443",
+        "details": {"family": "gptoss", "families": ["gptoss"]},
+    },
 ]
 
 SHOW: dict[str, dict[str, Any]] = {
-    "gemma4:latest": {"capabilities": ["completion", "vision", "thinking"],
-                      "thinking": {"values": [False, True], "default": True},
-                      "details": {"family": "gemma4", "families": ["gemma4"]}},
-    "qwen3:latest": {"capabilities": ["completion", "tools", "thinking"],
-                     "thinking": {"values": ["low", "medium", "high"], "default": "medium"},
-                     "details": {"family": "qwen3", "families": ["qwen3"]}},
-    "nimble:latest": {"capabilities": ["decision"],
-                      "details": {"family": "nimble", "families": ["nimble"]}},
-    "clef-flash:latest": {"capabilities": ["decision", "vision"],
-                          "details": {"family": "clef", "families": ["clef"]}},
-    "embeddinggemma:latest": {"capabilities": ["embedding"],
-                              "details": {"family": "gemma3", "families": ["gemma3"]}},
-    "gpt-oss:120b-cloud": {"capabilities": ["completion", "tools", "thinking"],
-                           "thinking": {"values": ["low", "medium", "high"],
-                                        "default": "medium"},
-                           "details": {"family": "gptoss", "families": ["gptoss"]}},
+    "gemma4:latest": {
+        "capabilities": ["completion", "vision", "thinking"],
+        "thinking": {"values": [False, True], "default": True},
+        "details": {"family": "gemma4", "families": ["gemma4"]},
+    },
+    "qwen3:latest": {
+        "capabilities": ["completion", "tools", "thinking"],
+        "thinking": {"values": ["low", "medium", "high"], "default": "medium"},
+        "details": {"family": "qwen3", "families": ["qwen3"]},
+    },
+    "nimble:latest": {
+        "capabilities": ["decision"],
+        "details": {"family": "nimble", "families": ["nimble"]},
+    },
+    "clef-flash:latest": {
+        "capabilities": ["decision", "vision"],
+        "details": {"family": "clef", "families": ["clef"]},
+    },
+    "embeddinggemma:latest": {
+        "capabilities": ["embedding"],
+        "details": {"family": "gemma3", "families": ["gemma3"]},
+    },
+    "gpt-oss:120b-cloud": {
+        "capabilities": ["completion", "tools", "thinking"],
+        "thinking": {"values": ["low", "medium", "high"], "default": "medium"},
+        "details": {"family": "gptoss", "families": ["gptoss"]},
+    },
 }
 
 CHAT_CHUNKS: list[dict[str, Any]] = [
-    {"model": "gemma4", "created_at": "t0", "message": {"role": "assistant", "content": "Hel"},
-     "done": False},
-    {"model": "gemma4", "created_at": "t1", "message": {"role": "assistant", "content": "lo"},
-     "done": False},
-    {"model": "gemma4", "created_at": "t2", "message": {"role": "assistant", "content": ""},
-     "done": True, "done_reason": "stop", "total_duration": 300, "load_duration": 100,
-     "prompt_eval_count": 5, "prompt_eval_duration": 50, "eval_count": 2, "eval_duration": 20},
+    {
+        "model": "gemma4",
+        "created_at": "t0",
+        "message": {"role": "assistant", "content": "Hel"},
+        "done": False,
+    },
+    {
+        "model": "gemma4",
+        "created_at": "t1",
+        "message": {"role": "assistant", "content": "lo"},
+        "done": False,
+    },
+    {
+        "model": "gemma4",
+        "created_at": "t2",
+        "message": {"role": "assistant", "content": ""},
+        "done": True,
+        "done_reason": "stop",
+        "total_duration": 300,
+        "load_duration": 100,
+        "prompt_eval_count": 5,
+        "prompt_eval_duration": 50,
+        "eval_count": 2,
+        "eval_duration": 20,
+    },
 ]
 
 
@@ -130,22 +190,39 @@ class FakeOllamaClient:
             return UpstreamResponse(404, {"error": f"model '{name}' not found"})
         if (method, path) == ("POST", "/api/generate"):
             return UpstreamResponse(
-                200, {"model": (body or {}).get("model"), "response": "", "done": True,
-                      "done_reason": "load" if (body or {}).get("keep_alive", 1) != 0
-                      else "unload"},
+                200,
+                {
+                    "model": (body or {}).get("model"),
+                    "response": "",
+                    "done": True,
+                    "done_reason": "load" if (body or {}).get("keep_alive", 1) != 0 else "unload",
+                },
             )
         if (method, path) == ("POST", "/api/chat"):
             return UpstreamResponse(
-                200, {"model": (body or {}).get("model"), "created_at": "t",
-                      "message": {"role": "assistant", "content": "Hello"}, "done": True,
-                      "done_reason": "stop", "eval_count": 2},
+                200,
+                {
+                    "model": (body or {}).get("model"),
+                    "created_at": "t",
+                    "message": {"role": "assistant", "content": "Hello"},
+                    "done": True,
+                    "done_reason": "stop",
+                    "eval_count": 2,
+                },
             )
         if (method, path) == ("POST", "/api/embed"):
-            n = len((body or {}).get("input", [])) if isinstance(
-                (body or {}).get("input"), list) else 1
+            n = (
+                len((body or {}).get("input", []))
+                if isinstance((body or {}).get("input"), list)
+                else 1
+            )
             return UpstreamResponse(
-                200, {"model": (body or {}).get("model"), "embeddings": [[1.0, 0.0]] * n,
-                      "prompt_eval_count": 3},
+                200,
+                {
+                    "model": (body or {}).get("model"),
+                    "embeddings": [[1.0, 0.0]] * n,
+                    "prompt_eval_count": 3,
+                },
             )
         if (method, path) == ("POST", "/v1/systemone"):
             answers = {
@@ -153,8 +230,12 @@ class FakeOllamaClient:
                 for name in ((body or {}).get("questions") or {})
             }
             return UpstreamResponse(
-                200, {"model": (body or {}).get("model"), "answers": answers,
-                      "usage": {"input_tokens": 10, "output_tokens": 1}},
+                200,
+                {
+                    "model": (body or {}).get("model"),
+                    "answers": answers,
+                    "usage": {"input_tokens": 10, "output_tokens": 1},
+                },
             )
         if (method, path) in {("POST", "/api/copy"), ("DELETE", "/api/delete")}:
             return UpstreamResponse(200, None)
@@ -171,8 +252,15 @@ class FakeOllamaClient:
             return [
                 {"model": "gemma4", "created_at": "t0", "response": "Hel", "done": False},
                 {"model": "gemma4", "created_at": "t1", "response": "lo", "done": False},
-                {"model": "gemma4", "created_at": "t2", "response": "", "done": True,
-                 "done_reason": "stop", "eval_count": 2, "prompt_eval_count": 5},
+                {
+                    "model": "gemma4",
+                    "created_at": "t2",
+                    "response": "",
+                    "done": True,
+                    "done_reason": "stop",
+                    "eval_count": 2,
+                    "prompt_eval_count": 5,
+                },
             ]
         return [{"status": "pulling manifest"}, {"status": "success"}]
 

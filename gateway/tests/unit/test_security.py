@@ -92,13 +92,21 @@ async def test_cloud_guard() -> None:
 
 DECISION = ShowInfo.from_show({"capabilities": ["decision"], "details": {"family": "nimble"}})
 CLEF = ShowInfo.from_show({"capabilities": ["decision", "vision"], "details": {"family": "clef"}})
-TEXT = ShowInfo.from_show({"capabilities": ["completion", "thinking"],
-                           "thinking": {"values": [False, True], "default": True}})
-LEVELS = ShowInfo.from_show({"capabilities": ["completion", "thinking"],
-                             "thinking": {"values": ["low", "medium", "high"],
-                                          "default": "medium"}})
-NO_THINK = ShowInfo.from_show({"capabilities": ["completion"],
-                               "thinking": {"values": [False], "default": False}})
+TEXT = ShowInfo.from_show(
+    {
+        "capabilities": ["completion", "thinking"],
+        "thinking": {"values": [False, True], "default": True},
+    }
+)
+LEVELS = ShowInfo.from_show(
+    {
+        "capabilities": ["completion", "thinking"],
+        "thinking": {"values": ["low", "medium", "high"], "default": "medium"},
+    }
+)
+NO_THINK = ShowInfo.from_show(
+    {"capabilities": ["completion"], "thinking": {"values": [False], "default": False}}
+)
 NO_META = ShowInfo.from_show({"capabilities": ["completion"]})
 
 

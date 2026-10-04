@@ -62,12 +62,23 @@ def test_chat_aggregate_collects_thinking_and_tool_calls() -> None:
     chunks: list[dict[str, Any]] = [
         {"model": "q", "message": {"role": "assistant", "thinking": "let me "}, "done": False},
         {"model": "q", "message": {"role": "assistant", "thinking": "think"}, "done": False},
-        {"model": "q", "message": {"role": "assistant", "content": "", "tool_calls": [call_a]},
-         "done": False},
-        {"model": "q", "message": {"role": "assistant", "content": "", "tool_calls": [call_b]},
-         "done": False},
-        {"model": "q", "message": {"role": "assistant", "content": ""}, "done": True,
-         "done_reason": "stop", "eval_count": 9},
+        {
+            "model": "q",
+            "message": {"role": "assistant", "content": "", "tool_calls": [call_a]},
+            "done": False,
+        },
+        {
+            "model": "q",
+            "message": {"role": "assistant", "content": "", "tool_calls": [call_b]},
+            "done": False,
+        },
+        {
+            "model": "q",
+            "message": {"role": "assistant", "content": ""},
+            "done": True,
+            "done_reason": "stop",
+            "eval_count": 9,
+        },
     ]
     agg = ChatAggregator()
     for chunk in chunks:
@@ -82,11 +93,25 @@ def test_chat_aggregate_collects_thinking_and_tool_calls() -> None:
 def test_generate_aggregate() -> None:
     agg = GenerateAggregator()
     agg.add({"model": "g", "response": "Th", "thinking": "hmm", "done": False})
-    agg.add({"model": "g", "response": "at", "done": True, "done_reason": "stop",
-             "eval_count": 2, "eval_duration": 10})
+    agg.add(
+        {
+            "model": "g",
+            "response": "at",
+            "done": True,
+            "done_reason": "stop",
+            "eval_count": 2,
+            "eval_duration": 10,
+        }
+    )
     assert agg.result() == {
-        "model": "g", "created_at": None, "response": "That", "thinking": "hmm",
-        "done": True, "done_reason": "stop", "eval_count": 2, "eval_duration": 10,
+        "model": "g",
+        "created_at": None,
+        "response": "That",
+        "thinking": "hmm",
+        "done": True,
+        "done_reason": "stop",
+        "eval_count": 2,
+        "eval_duration": 10,
     }
 
 
@@ -137,9 +162,11 @@ def test_ensure_ok_returns_body_or_raises() -> None:
 def test_translate_exceptions() -> None:
     assert translate(UpstreamHTTPError(503, None)).code is ErrorCode.UPSTREAM_BUSY  # type: ignore[union-attr]
     mid = translate(UpstreamStreamError("bad"))
-    assert mid is not None and mid.code is ErrorCode.UPSTREAM_ERROR and mid.details == {
-        "mid_stream": True
-    }
+    assert (
+        mid is not None
+        and mid.code is ErrorCode.UPSTREAM_ERROR
+        and mid.details == {"mid_stream": True}
+    )
     down = translate(UpstreamUnavailableError("refused"))
     assert down is not None and down.code is ErrorCode.UPSTREAM_UNAVAILABLE
     same = GatewayError(ErrorCode.TIMEOUT, "t")
@@ -196,16 +223,20 @@ def test_normalize_name() -> None:
 
 
 def test_show_info_parsing() -> None:
-    info = ShowInfo.from_show({
-        "capabilities": ["decision"],
-        "details": {"family": "nimble", "families": ["nimble"]},
-    })
+    info = ShowInfo.from_show(
+        {
+            "capabilities": ["decision"],
+            "details": {"family": "nimble", "families": ["nimble"]},
+        }
+    )
     assert info.is_decision_only and info.has_decision and not info.has_vision
     assert info.thinking_values is None
-    thinking = ShowInfo.from_show({
-        "capabilities": ["completion", "thinking"],
-        "thinking": {"values": [False, True, "high"], "default": True},
-    })
+    thinking = ShowInfo.from_show(
+        {
+            "capabilities": ["completion", "thinking"],
+            "thinking": {"values": [False, True, "high"], "default": True},
+        }
+    )
     assert thinking.thinking_values == (False, True, "high")
     assert thinking.thinking_default is True
     assert not thinking.is_decision_only

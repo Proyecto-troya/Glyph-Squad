@@ -21,8 +21,15 @@ def _slow_fake(chunks: int = 20, delay: float = 0.05) -> FakeOllamaClient:
         {"model": "gemma4", "message": {"role": "assistant", "content": f"c{i}"}, "done": False}
         for i in range(chunks)
     ]
-    stream.append({"model": "gemma4", "message": {"role": "assistant", "content": ""},
-                   "done": True, "done_reason": "stop", "eval_count": chunks})
+    stream.append(
+        {
+            "model": "gemma4",
+            "message": {"role": "assistant", "content": ""},
+            "done": True,
+            "done_reason": "stop",
+            "eval_count": chunks,
+        }
+    )
     fake.on_stream("POST", "/api/chat", stream)
     return fake
 
@@ -35,23 +42,27 @@ def test_auth_failure_sends_error_then_closes() -> None:
         for token in (None, "wrong", ""):
             with pytest.raises(WebSocketDisconnect) as info, connect(client, token=token) as ws:
                 frame = ws.receive_json()
-                assert frame == {"id": None, "type": "error",
-                                 "data": {"code": "UNAUTHORIZED",
-                                          "message": "missing or invalid gateway token"}}
+                assert frame == {
+                    "id": None,
+                    "type": "error",
+                    "data": {"code": "UNAUTHORIZED", "message": "missing or invalid gateway token"},
+                }
                 ws.receive_json()
             assert info.value.code == 4401
 
 
 def test_auth_via_subprotocol_selects_gateway_v1() -> None:
     with gateway_client() as (client, _):
-        with connect(client, token=None,
-                     subprotocols=["gateway.v1", f"gateway.token.{TOKEN}"]) as ws:
+        with connect(
+            client, token=None, subprotocols=["gateway.v1", f"gateway.token.{TOKEN}"]
+        ) as ws:
             assert str(ws.accepted_subprotocol) == "gateway.v1"
             send(ws, "1", "ping", {})
             assert collect(ws, "1")[0]["data"]["pong"] is True
-        with pytest.raises(WebSocketDisconnect) as info, connect(
-            client, token=None, subprotocols=["gateway.v1", "gateway.token.nope"]
-        ) as ws:
+        with (
+            pytest.raises(WebSocketDisconnect) as info,
+            connect(client, token=None, subprotocols=["gateway.v1", "gateway.token.nope"]) as ws,
+        ):
             ws.receive_json()
             ws.receive_json()
         assert info.value.code == 4401
@@ -66,9 +77,10 @@ def test_origin_allowlist() -> None:
         with connect(client) as ws:  # non-browser client, no Origin
             send(ws, "1", "ping", {})
             collect(ws, "1")
-        with pytest.raises(WebSocketDisconnect) as info, connect(
-            client, origin="https://evil.invalid"
-        ) as ws:
+        with (
+            pytest.raises(WebSocketDisconnect) as info,
+            connect(client, origin="https://evil.invalid") as ws,
+        ):
             assert ws.receive_json()["data"]["code"] == "UNAUTHORIZED"
             ws.receive_json()
         assert info.value.code == 4403
@@ -230,8 +242,12 @@ def test_oversize_message_and_image_limit() -> None:
         frame = collect(ws, "big")[0]
         assert frame["data"]["code"] == "PAYLOAD_TOO_LARGE" and frame["id"] == "big"
         image = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"\x00" * 2200).decode()
-        send(ws, "img", "generate", {"model": "gemma4", "prompt": "p", "images": [image],
-                                     "stream": False})
+        send(
+            ws,
+            "img",
+            "generate",
+            {"model": "gemma4", "prompt": "p", "images": [image], "stream": False},
+        )
         assert collect(ws, "img")[0]["type"] == "result"
         huge = base64.b64encode(b"\x00" * 7000).decode()
         send(ws, "huge", "generate", {"model": "gemma4", "prompt": "p", "images": [huge]})
@@ -239,8 +255,9 @@ def test_oversize_message_and_image_limit() -> None:
         assert frame["data"]["code"] == "PAYLOAD_TOO_LARGE"
         assert frame["data"]["details"]["limit"] == 8192
         # Above the hard cap the frame is not parsed, but the id is still sniffed out.
-        ws.send_text(json.dumps({"v": 1, "id": "cap", "action": "ping",
-                                 "payload": {"x": "y" * 9000}}))
+        ws.send_text(
+            json.dumps({"v": 1, "id": "cap", "action": "ping", "payload": {"x": "y" * 9000}})
+        )
         frame = ws.receive_json()
         assert frame["id"] == "cap" and frame["data"]["code"] == "PAYLOAD_TOO_LARGE"
         ws.send_text("[" + "1," * 5000 + "1]")
@@ -253,29 +270,67 @@ def test_oversize_message_and_image_limit() -> None:
 
 def test_tool_loop_round_trip_over_ws() -> None:
     fake = FakeOllamaClient()
-    call: dict[str, Any] = {"type": "function",
-                            "function": {"index": 0, "name": "lookup", "arguments": {"q": "x"}}}
-    fake.on_stream("POST", "/api/chat", [
-        {"model": "qwen3", "message": {"role": "assistant", "thinking": "use tool"}, "done": False},
-        {"model": "qwen3", "message": {"role": "assistant", "content": "", "tool_calls": [call]},
-         "done": False},
-        {"model": "qwen3", "message": {"role": "assistant", "content": ""}, "done": True,
-         "done_reason": "stop"},
-    ])
+    call: dict[str, Any] = {
+        "type": "function",
+        "function": {"index": 0, "name": "lookup", "arguments": {"q": "x"}},
+    }
+    fake.on_stream(
+        "POST",
+        "/api/chat",
+        [
+            {
+                "model": "qwen3",
+                "message": {"role": "assistant", "thinking": "use tool"},
+                "done": False,
+            },
+            {
+                "model": "qwen3",
+                "message": {"role": "assistant", "content": "", "tool_calls": [call]},
+                "done": False,
+            },
+            {
+                "model": "qwen3",
+                "message": {"role": "assistant", "content": ""},
+                "done": True,
+                "done_reason": "stop",
+            },
+        ],
+    )
     with gateway_client(fake) as (client, _), connect(client) as ws:
-        send(ws, "r1", "chat", {"model": "qwen3", "think": "low",
-                                "messages": [{"role": "user", "content": "q"}]})
+        send(
+            ws,
+            "r1",
+            "chat",
+            {"model": "qwen3", "think": "low", "messages": [{"role": "user", "content": "q"}]},
+        )
         result = collect(ws, "r1")[-1]["data"]
         assert result["message"]["tool_calls"] == [call]
         assert result["message"]["thinking"] == "use tool"
-        fake.on("POST", "/api/chat", 200, {"model": "qwen3", "message": {
-            "role": "assistant", "content": "done"}, "done": True})
-        send(ws, "r2", "chat", {"model": "qwen3", "stream": False, "messages": [
-            {"role": "user", "content": "q"},
-            {"role": "assistant", "content": "", "thinking": result["message"]["thinking"],
-             "tool_calls": result["message"]["tool_calls"]},
-            {"role": "tool", "tool_name": "lookup", "content": "42"},
-        ]})
+        fake.on(
+            "POST",
+            "/api/chat",
+            200,
+            {"model": "qwen3", "message": {"role": "assistant", "content": "done"}, "done": True},
+        )
+        send(
+            ws,
+            "r2",
+            "chat",
+            {
+                "model": "qwen3",
+                "stream": False,
+                "messages": [
+                    {"role": "user", "content": "q"},
+                    {
+                        "role": "assistant",
+                        "content": "",
+                        "thinking": result["message"]["thinking"],
+                        "tool_calls": result["message"]["tool_calls"],
+                    },
+                    {"role": "tool", "tool_name": "lookup", "content": "42"},
+                ],
+            },
+        )
         assert collect(ws, "r2")[0]["data"]["message"]["content"] == "done"
         sent = fake.last_body("/api/chat")
         assert sent["messages"][2]["tool_name"] == "lookup"

@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "digest"
+  ],
+  "title": "BlobExistsPayload",
+  "type": "object"
+}

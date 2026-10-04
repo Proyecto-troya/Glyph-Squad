@@ -53,8 +53,14 @@ def create_app(
             if owns_client:
                 await upstream.aclose()
 
-    app = FastAPI(title="Leaf Plate gateway", version=__version__, lifespan=lifespan,
-                  docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(
+        title="Leaf Plate gateway",
+        version=__version__,
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
     app.include_router(ws_router)
     return app
 
@@ -70,7 +76,8 @@ async def _probe_upstream(cache: ModelInfoCache, settings: Settings) -> None:
         return
     log.info("Ollama %s at %s", gate.version, settings.ollama_url)
     if not gate.supports_systemone:
-        log.warning("Ollama %s is below 0.35.0: systemone will answer UNSUPPORTED_VERSION",
-                    gate.version)
+        log.warning(
+            "Ollama %s is below 0.35.0: systemone will answer UNSUPPORTED_VERSION", gate.version
+        )
     elif not gate.supports_systemone_images:
         log.warning("Ollama %s is below 0.35.1: systemone images are unsupported", gate.version)

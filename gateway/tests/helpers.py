@@ -13,8 +13,23 @@ from tests.fakes import FakeOllamaClient
 
 ALL_ACTIONS = frozenset(
     {
-        "version", "list", "show", "ps", "load", "unload", "generate", "chat", "embed",
-        "systemone", "create", "blob_exists", "blob_upload", "copy", "delete", "pull", "push",
+        "version",
+        "list",
+        "show",
+        "ps",
+        "load",
+        "unload",
+        "generate",
+        "chat",
+        "embed",
+        "systemone",
+        "create",
+        "blob_exists",
+        "blob_upload",
+        "copy",
+        "delete",
+        "pull",
+        "push",
         "ping",
     }
 )

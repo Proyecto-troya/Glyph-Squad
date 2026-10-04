@@ -36,9 +36,9 @@ def runtime_of(websocket: WebSocket) -> GatewayRuntime:
 
 async def _reject(websocket: WebSocket, subprotocol: str | None, code: int, reason: str) -> None:
     await websocket.accept(subprotocol=subprotocol)
-    await websocket.send_text(json.dumps(
-        error_frame(None, GatewayError(ErrorCode.UNAUTHORIZED, reason))
-    ))
+    await websocket.send_text(
+        json.dumps(error_frame(None, GatewayError(ErrorCode.UNAUTHORIZED, reason)))
+    )
     await websocket.close(code=code)
 
 

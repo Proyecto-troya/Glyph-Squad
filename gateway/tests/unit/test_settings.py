@@ -31,9 +31,7 @@ def test_csv_lists(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GATEWAY_ALLOWED_ORIGINS", "https://192.168.1.5:5173,http://192.168.1.5")
     settings = Settings()
     assert settings.enabled_actions == frozenset({"version", "list", "chat"})
-    assert settings.allowed_origins == frozenset(
-        {"https://192.168.1.5:5173", "http://192.168.1.5"}
-    )
+    assert settings.allowed_origins == frozenset({"https://192.168.1.5:5173", "http://192.168.1.5"})
     assert settings.is_enabled("chat") and not settings.is_enabled("pull")
 
 
@@ -41,8 +39,8 @@ def test_csv_lists(monkeypatch: pytest.MonkeyPatch) -> None:
     ("var", "value"),
     [
         ("GATEWAY_HOST", "my-laptop"),
-        ("GATEWAY_OLLAMA_URL", "http://ollama.lan:11434"),
-        ("GATEWAY_OLLAMA_URL", "http://localhost:11434"),
+        ("GATEWAY_OLLAMA_URL", "http://ollama.lan:11434"),  # hostname-check: allow
+        ("GATEWAY_OLLAMA_URL", "http://localhost:11434"),  # hostname-check: allow
         ("GATEWAY_OLLAMA_URL", "ftp://127.0.0.1"),
     ],
 )

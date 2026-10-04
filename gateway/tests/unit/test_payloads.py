@@ -42,13 +42,15 @@ def test_think_rejects_numbers_and_structures(think: object) -> None:
 
 
 def test_think_false_survives_upstream_dump_but_omitted_null_does_not() -> None:
-    sent = dump_for_upstream(ChatPayload.model_validate(
-        {"model": "m", "messages": [{"role": "user", "content": "hi"}], "think": False}
-    ))
+    sent = dump_for_upstream(
+        ChatPayload.model_validate(
+            {"model": "m", "messages": [{"role": "user", "content": "hi"}], "think": False}
+        )
+    )
     assert sent["think"] is False
-    unset = dump_for_upstream(ChatPayload.model_validate(
-        {"model": "m", "messages": [{"role": "user", "content": "hi"}]}
-    ))
+    unset = dump_for_upstream(
+        ChatPayload.model_validate({"model": "m", "messages": [{"role": "user", "content": "hi"}]})
+    )
     assert "think" not in unset
     assert "stream" not in unset  # defaults are not forwarded; handlers set stream explicitly
 
@@ -104,8 +106,11 @@ def test_chat_message_guide_fields_thinking_and_tool_name() -> None:
                     "tool_calls": [
                         {
                             "type": "function",
-                            "function": {"index": 0, "name": "get_temperature",
-                                         "arguments": {"city": "NY"}},
+                            "function": {
+                                "index": 0,
+                                "name": "get_temperature",
+                                "arguments": {"city": "NY"},
+                            },
                         }
                     ],
                 },
@@ -157,10 +162,16 @@ def test_systemone_question_types() -> None:
     payload = SystemOnePayload.model_validate(
         _s1(
             questions={
-                "label": {"type": "choice", "instructions": "which?",
-                          "criteria": {"a": "A", "b": None}},
-                "ok": {"type": "noul", "instructions": "ok?",
-                       "criteria": {"false": "no", "true": "yes"}},
+                "label": {
+                    "type": "choice",
+                    "instructions": "which?",
+                    "criteria": {"a": "A", "b": None},
+                },
+                "ok": {
+                    "type": "noul",
+                    "instructions": "ok?",
+                    "criteria": {"false": "no", "true": "yes"},
+                },
                 "urgency": {"type": "score", "instructions": "how?", "criteria": ["lo", "hi"]},
             }
         )
@@ -177,8 +188,16 @@ def test_systemone_question_types() -> None:
         ({f"q{i}": {"type": "noul", "instructions": "x"} for i in range(65)}, "questions"),
         ({" ": {"type": "noul", "instructions": "x"}}, "blank"),
         ({"q": {"type": "choice", "instructions": "x", "criteria": {"a": "A"}}}, "criteria"),
-        ({"q": {"type": "choice", "instructions": "x",
-                "criteria": {str(i): None for i in range(27)}}}, "criteria"),
+        (
+            {
+                "q": {
+                    "type": "choice",
+                    "instructions": "x",
+                    "criteria": {str(i): None for i in range(27)},
+                }
+            },
+            "criteria",
+        ),
         ({"q": {"type": "choice", "instructions": "x", "criteria": {" ": "A", "b": "B"}}}, "blank"),
         ({"q": {"type": "score", "instructions": "x", "criteria": ["only"]}}, "criteria"),
         ({"q": {"type": "noul", "instructions": "x", "criteria": {"maybe": "m"}}}, "maybe"),
@@ -225,8 +244,10 @@ def test_create_gguf_rejects_quantize() -> None:
 
 def test_create_split_gguf_one_entry_per_shard() -> None:
     payload = CreatePayload.model_validate(
-        {"model": "m",
-         "files": {"model-00001-of-00002.gguf": SHA, "model-00002-of-00002.gguf": SHA}}
+        {
+            "model": "m",
+            "files": {"model-00001-of-00002.gguf": SHA, "model-00002-of-00002.gguf": SHA},
+        }
     )
     assert payload.files is not None and len(payload.files) == 2
 

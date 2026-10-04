@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "description": "Needs internet. Disabled unless ``pull`` is in GATEWAY_ENABLED_ACTIONS.",
+  "properties": {
+    "insecure": {
+      "default": false,
+      "title": "Insecure",
+      "type": "boolean"
+    },
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    },
+    "stream": {
+      "default": true,
+      "title": "Stream",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "model"
+  ],
+  "title": "PullPayload",
+  "type": "object"
+}

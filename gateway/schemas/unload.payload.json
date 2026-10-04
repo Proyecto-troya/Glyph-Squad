@@ -1,0 +1,17 @@
+{
+  "additionalProperties": false,
+  "description": "The handler always sends ``keep_alive: 0``.",
+  "properties": {
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    }
+  },
+  "required": [
+    "model"
+  ],
+  "title": "UnloadPayload",
+  "type": "object"
+}

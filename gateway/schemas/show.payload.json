@@ -1,0 +1,21 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "model": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Model",
+      "type": "string"
+    },
+    "verbose": {
+      "default": false,
+      "title": "Verbose",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "model"
+  ],
+  "title": "ShowPayload",
+  "type": "object"
+}

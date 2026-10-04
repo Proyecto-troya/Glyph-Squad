@@ -52,11 +52,16 @@ class Session:
         size = len(text.encode("utf-8"))
         if size > self._limits.hard_cap():
             cap = self._limits.hard_cap()
-            await self._send(error_frame(sniff_request_id(text), GatewayError(
-                ErrorCode.PAYLOAD_TOO_LARGE,
-                f"message is {size} bytes; the hard cap is {cap}",
-                {"size": size, "limit": cap},
-            )))
+            await self._send(
+                error_frame(
+                    sniff_request_id(text),
+                    GatewayError(
+                        ErrorCode.PAYLOAD_TOO_LARGE,
+                        f"message is {size} bytes; the hard cap is {cap}",
+                        {"size": size, "limit": cap},
+                    ),
+                )
+            )
             return
         try:
             envelope = parse_envelope(text)
@@ -77,9 +82,14 @@ class Session:
         )
 
     async def handle_binary(self) -> None:
-        await self._send(error_frame(None, GatewayError(
-            ErrorCode.INVALID_REQUEST, "binary frames are not supported; send JSON text"
-        )))
+        await self._send(
+            error_frame(
+                None,
+                GatewayError(
+                    ErrorCode.INVALID_REQUEST, "binary frames are not supported; send JSON text"
+                ),
+            )
+        )
 
     async def close(self) -> None:
         for task in list(self._tasks.values()):
@@ -125,31 +135,46 @@ class Session:
             await self._send(result_frame(envelope.id, result))
         except asyncio.CancelledError:
             status = ErrorCode.CANCELLED.value
-            await self._send_quietly(error_frame(envelope.id, GatewayError(
-                ErrorCode.CANCELLED, "request cancelled by the client"
-            )))
+            await self._send_quietly(
+                error_frame(
+                    envelope.id,
+                    GatewayError(ErrorCode.CANCELLED, "request cancelled by the client"),
+                )
+            )
         except TimeoutError:
             status = ErrorCode.TIMEOUT.value
-            await self._send_quietly(error_frame(envelope.id, GatewayError(
-                ErrorCode.TIMEOUT,
-                f"request exceeded {self._timeout:g}s",
-                {"timeout_s": self._timeout},
-            )))
+            await self._send_quietly(
+                error_frame(
+                    envelope.id,
+                    GatewayError(
+                        ErrorCode.TIMEOUT,
+                        f"request exceeded {self._timeout:g}s",
+                        {"timeout_s": self._timeout},
+                    ),
+                )
+            )
         except GatewayError as exc:
             status = exc.code.value
             await self._send_quietly(error_frame(envelope.id, exc))
         except Exception:
             status = ErrorCode.UPSTREAM_ERROR.value
             log.exception("unhandled error in action %s", envelope.action)
-            await self._send_quietly(error_frame(envelope.id, GatewayError(
-                ErrorCode.UPSTREAM_ERROR, "internal gateway error"
-            )))
+            await self._send_quietly(
+                error_frame(
+                    envelope.id, GatewayError(ErrorCode.UPSTREAM_ERROR, "internal gateway error")
+                )
+            )
         finally:
             self._tasks.pop(envelope.id, None)
             duration_ms = round((time.monotonic() - started) * 1000)
             log.info(
                 "action=%s id=%s status=%s duration_ms=%d peer=%s usage=%s",
-                envelope.action, envelope.id, status, duration_ms, self._peer, usage,
+                envelope.action,
+                envelope.id,
+                status,
+                duration_ms,
+                self._peer,
+                usage,
             )
 
     async def _send_quietly(self, frame: dict[str, Any]) -> None:
