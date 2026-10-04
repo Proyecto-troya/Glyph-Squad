@@ -2,17 +2,15 @@
 cusqueño (facebook/mms-tts-quz) y en español (facebook/mms-tts-spa).
 
 Los textos salen de app/public/data/messages.json ("say"); los clips van a
-app/public/audio/{quz,es}/<clip>.opus. Necesita ffmpeg en el PATH.
+app/public/audio/{quz,es}/<clip>.opus (Ogg Opus, escrito con soundfile).
 
 AVISO: MMS-TTS es CC BY-NC (solo demo). El quechua es traducción automática y voz
 sintética, sin validar por hablante: la app lo rotula así.
 """
 import json
-import subprocess
-import tempfile
 from pathlib import Path
 
-import scipy.io.wavfile
+import soundfile
 import torch
 from transformers import AutoTokenizer, VitsModel
 
@@ -56,14 +54,9 @@ def main():
         for clip, text in texts.items():
             with torch.no_grad():
                 wave = model(**tokenizer(text, return_tensors="pt")).waveform[0].numpy()
-            with tempfile.TemporaryDirectory() as tmp:
-                wav = Path(tmp) / "clip.wav"
-                scipy.io.wavfile.write(wav, model.config.sampling_rate, wave)
-                subprocess.run(
-                    ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-c:a", "libopus", "-b:a", "16k",
-                     str(out_dir / f"{clip}.opus")],
-                    check=True,
-                )
+            # La voz quechua sale mucho más baja que la española: igualar el volumen.
+            wave = wave / max(abs(wave).max(), 1e-6) * 0.9
+            soundfile.write(out_dir / f"{clip}.opus", wave, model.config.sampling_rate, format="OGG", subtype="OPUS")
             print(lang, clip, text)
 
 

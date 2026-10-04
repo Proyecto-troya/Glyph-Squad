@@ -37,3 +37,26 @@ export async function requestSentence(
     clearTimeout(timer);
   }
 }
+
+/** El servidor (POST /api/send) envía el SMS al técnico. El número lo fija el servidor, no la app. */
+export const SMS_SEND_ENABLED: boolean = true;
+
+/** "simulated": el servidor no tiene proveedor de SMS configurado y no envió nada (modo demo). */
+export type SendStatus = "sent" | "simulated";
+
+/** Devuelve null si el servidor no responde o rechaza el mensaje. */
+export async function sendSms(baseUrl: string, code: string, text: string | null): Promise<SendStatus | null> {
+  try {
+    const response = await fetch(`${baseUrl.trim().replace(/\/+$/, "")}/api/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(text ? { code, text } : { code }),
+      signal: AbortSignal.timeout(SMS_SERVICE_TIMEOUT_MS),
+    });
+    if (!response.ok) return null;
+    const status = ((await response.json()) as { status?: string }).status;
+    return status === "sent" || status === "simulated" ? status : null;
+  } catch {
+    return null;
+  }
+}

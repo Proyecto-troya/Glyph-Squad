@@ -1,9 +1,3 @@
-// Tipografías empaquetadas con la app (solo latín) para que funcionen sin conexión.
-import "@fontsource/ibm-plex-sans/latin-400.css";
-import "@fontsource/ibm-plex-sans/latin-400-italic.css";
-import "@fontsource/ibm-plex-sans/latin-600.css";
-import "@fontsource/ibm-plex-sans/latin-700.css";
-import "@fontsource/ibm-plex-mono/latin-600.css";
 import "./style.css";
 import { loadClassifier } from "./adapters/classifier";
 import { stopAudio } from "./adapters/audio";

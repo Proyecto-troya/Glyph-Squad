@@ -36,4 +36,6 @@ export default defineConfig({
   base: "./",
   build: { outDir: dist, emptyOutDir: true },
   plugins: [swPrecache()],
+  // Sin preempaquetar: en desarrollo el .wasm de onnxruntime-web se sirve junto a su .mjs.
+  optimizeDeps: { exclude: ["onnxruntime-web"] },
 });

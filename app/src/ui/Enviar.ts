@@ -1,4 +1,4 @@
-import { requestSentence, SMS_SERVICE_ENABLED } from "../adapters/smsService";
+import { requestSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
 import { storage } from "../adapters/storage";
 import { countLeaves } from "../domain/sample";
 import { buildSmsRequest, composeSms } from "../domain/sms";
@@ -18,7 +18,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
   let sms = code;
 
   // La app no envía nada: solo abre la app de SMS con el texto listo y ella pulsa enviar.
-  const link = el("a", { class: "button primary big" }, icon("message"), "Abrir SMS para el técnico");
+  const link = el("a", { class: SMS_SEND_ENABLED ? "button big" : "button primary big" }, icon("message"), "Abrir SMS para el técnico");
   const codeBox = el("p", { class: "code" }, code);
   const sentenceBox = el("p", { class: "sentence" });
   const sentenceLabel = el("p", { class: "hint" });
@@ -86,6 +86,22 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     app.go("muestra");
   };
 
+  // Envío por el servidor; el enlace sms: queda como respaldo sin conexión.
+  const sendStatus = el("p", { class: "status" });
+  const sendButton = el("button", { class: "primary big", type: "button" }, icon("send"), "Enviar al técnico");
+  sendButton.onclick = async () => {
+    sendButton.disabled = true;
+    sendStatus.textContent = "Enviando…";
+    const status = await sendSms(app.serviceUrl, code, sms === code ? null : sms.slice(code.length + 1));
+    sendButton.disabled = status === "sent";
+    sendStatus.textContent =
+      status === "sent"
+        ? "Mensaje enviado al técnico."
+        : status === "simulated"
+          ? "Demostración: el servidor recibió el mensaje, pero no tiene servicio de SMS y no envió nada."
+          : "No se pudo enviar por el servidor. Usa el botón de SMS del teléfono.";
+  };
+
   root.append(
     el("h1", {}, "Mensaje para el técnico"),
     messageCard({ id: "M08" }, app.catalog),
@@ -98,7 +114,9 @@ export function renderEnviar(root: HTMLElement, app: App): void {
       sentenceLabel,
       el("p", { class: "hint" }, "El mensaje lleva solo el código de parcela y los conteos. Las fotos no salen del teléfono."),
     ),
-    el("label", {}, "Número del técnico", number),
+    SMS_SEND_ENABLED ? sendButton : "",
+    SMS_SEND_ENABLED ? sendStatus : "",
+    el("label", {}, "Número del técnico (para el SMS desde este teléfono)", number),
     link,
     el("div", { class: "row" }, copy, restart),
   );

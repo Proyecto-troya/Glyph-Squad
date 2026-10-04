@@ -223,3 +223,6 @@ __marimo__/
 node_modules/
 ml/data/
 ml/out/
+
+.vercel
+.env*

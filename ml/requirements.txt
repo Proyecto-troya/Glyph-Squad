@@ -6,4 +6,4 @@ pillow
 onnx
 onnxruntime
 transformers
-scipy
+soundfile
