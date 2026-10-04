@@ -6,7 +6,7 @@
   <img alt="Sector: agricultura" src="https://img.shields.io/badge/sector-agricultura-133f27">
   <img alt="La IA corre en el teléfono" src="https://img.shields.io/badge/IA-en%20el%20tel%C3%A9fono-1f6b3a">
   <img alt="Idiomas: español, quechua en borrador, inglés" src="https://img.shields.io/badge/idiomas-ES%20%C2%B7%20QU%20(borrador)%20%C2%B7%20EN-1f6b3a">
-  <img alt="38 pruebas unitarias pasan" src="https://img.shields.io/badge/pruebas-38%20pasan-2e8b57">
+  <img alt="Pasan 72 pruebas de la app y 244 del gateway" src="https://img.shields.io/badge/pruebas-72%20app%20%C2%B7%20244%20gateway-2e8b57">
   <img alt="Estado: prototipo de hackathon" src="https://img.shields.io/badge/estado-prototipo%20de%20hackathon-c25a14">
   <img alt="Licencia: MIT" src="https://img.shields.io/badge/licencia-MIT-48534b">
 </p>
@@ -99,10 +99,13 @@ flowchart LR
     G --> H
     H --> I["Mensaje fijo, texto y audio:<br>español, quechua, inglés"]
     I --> J["Ella pulsa enviar:<br>un SMS"]
+    I -. "solo con conexión" .-> L["Un modelo de lenguaje pequeño<br>redacta una frase,<br>validada contra los conteos"]
+    L -.-> J
     J --> K["Lista del técnico,<br>la más afectada primero"]
 
     style D fill:#1f6b3a,stroke:#133f27,color:#ffffff
     style K fill:#133f27,stroke:#133f27,color:#ffffff
+    style L fill:#ffffff,stroke:#1f6b3a,color:#133f27,stroke-dasharray: 5 5
 ```
 
 El muestreo sigue, simplificado, el patrón de plantas y ramas con que se evalúa la roya en
@@ -124,22 +127,35 @@ viejas y de muestras con muchas dudas). Un enlace bajo la barra superior pasa de
 
 ## Qué hace la IA y qué no
 
-| Lo único que hace la IA | A propósito, sin IA |
-|---|---|
-| Un modelo de visión pequeño (MobileNetV3-small, 5,8 MB) distingue cinco estados de la hoja: sana, roya, minador, cercospora, phoma. Por debajo de una confianza calibrada dice "no estoy seguro". | El filtro de calidad de la foto (nitidez, brillo, área de hoja) · el conteo · la pregunta de edad · los mensajes fijos y su audio · el código SMS · la lista y la decisión del técnico |
+| Componente de IA | Dónde corre | Qué hace | Cómo se le pone límite |
+|---|---|---|---|
+| **Clasificador de visión** (MobileNetV3-small, 5,8 MB) | En el teléfono, sin red | Distingue cinco estados de la hoja: sana, roya, minador, cercospora, phoma | Por debajo de una confianza calibrada dice "no estoy seguro"; antes, un filtro de reglas rechaza las fotos malas |
+| **Modelo de lenguaje pequeño** (`llama3.2:3b` en la laptop del equipo, o `meta/llama-3.1-8b` alojado) | Fuera del teléfono, solo cuando hay conexión | Redacta una frase opcional para el técnico a partir de los conteos | Solo recibe el código de parcela y los conteos; un servidor valida la frase contra ellos; si no vale, va solo la frase fija; la app la rotula como redactada por IA y le pide leerla antes de enviar |
 
-Un SMS no puede mirar una hoja. Lo que un SMS sí puede hacer, se lo dejamos al SMS.
+**A propósito, sin IA:** el filtro de calidad de la foto (nitidez, brillo, área de hoja) · el
+conteo · la pregunta de edad · los mensajes fijos y su audio · el código SMS y su frase fija ·
+la lista y la decisión del técnico.
+
+El trabajo central, nombrar la hoja y armar el SMS, solo necesita el primer componente y
+funciona sin el segundo. Un SMS no puede mirar una hoja. Lo que un SMS sí puede hacer, se lo
+dejamos al SMS.
 
 **Salvaguardas**
 
 - La decisión final es de una persona: ella pulsa enviar y el técnico decide el control.
-- Una lista fija de ocho mensajes. En el teléfono no se genera texto. La pantalla de envío
+- Lo que Noor lee y escucha sale de una lista fija de ocho mensajes. En el teléfono no se
+  genera texto. La pantalla de envío
   dice siempre: "Esto no es un diagnóstico. Envía el mensaje al técnico de la cooperativa; él
   decide."
 - Confianza baja se cuenta como "duda"; una foto mala se rechaza y se repite. Con muchas
   dudas, el mensaje dice que el técnico debería ver las hojas.
 - Sin dosis, tratamientos, rendimiento ni precio.
-- Las fotos y el conteo se quedan en el teléfono. El SMS lleva solo código de parcela y conteos.
+- El único texto generado es la frase opcional para el técnico. El servidor que la pide solo
+  la acepta si es una línea simple que cabe en el SMS, usa exactamente los números de los
+  conteos y evita una lista de términos vetados (dosis, productos, tratamientos, rendimiento,
+  precio).
+- Las fotos se quedan en el teléfono. Lo único que sale es el código de parcela y los conteos:
+  en el SMS y, cuando hay conexión, hacia el servicio que redacta el mensaje de IA.
 - El quechua está rotulado en pantalla como traducción automática sin validar por hablante.
 
 Debajo del código, el SMS lleva una frase fija que la app arma con reglas a partir de los
@@ -200,10 +216,12 @@ de la app son el WASM de onnxruntime-web.
 
 ## Estado
 
-- [x] Lógica de dominio con 38 pruebas unitarias: conteo, mensajes, SMS ida y vuelta, lista, calidad de foto, traducciones
+- [x] Lógica de dominio y funciones de servidor con 72 pruebas unitarias: conteo, mensajes, SMS ida y vuelta, lista, calidad de foto, traducciones, servicio de la frase
 - [x] Cuatro pantallas, en español, quechua (borrador) e inglés
 - [x] El modelo real y los 78 clips de audio, comprobados en Chrome sobre el despliegue
 - [x] Funciones de servidor en Vercel para enviar el SMS (Twilio o un Android como pasarela)
+- [x] El mensaje de IA para el técnico en el despliegue: el 4 de octubre el `/api/sms` en línea devolvió una frase validada del modelo alojado
+- [x] Gateway de la laptop (FastAPI + Ollama 0.35.1, sin internet): `/ws` para las herramientas del equipo y `POST /api/sms` con validación y plantilla de respaldo, 244 pruebas, comprobado por la red local ([gateway/README.md](gateway/README.md))
 - [ ] Modo sin conexión comprobado en el Android (en la laptop de desarrollo Chrome no logra guardar el WASM de 14 MB)
 - [ ] Un SMS realmente enviado y recibido (el servidor desplegado no tiene credenciales de SMS y responde `simulated`)
 - [ ] Texto y pronunciación del quechua revisados por alguien que lo hable
@@ -217,7 +235,7 @@ de la app son el WASM de onnxruntime-web.
 ```
 npm install
 npm run dev       # desarrollo; --host para abrirla desde el teléfono en la misma red
-npm test          # pruebas unitarias: conteo, mensajes, SMS ida y vuelta, lista, calidad de foto
+npm test          # 72 pruebas unitarias: conteo, mensajes, SMS, lista, calidad de foto, funciones de servidor
 npm run build     # dist/ con service worker (modo sin conexión)
 npm run size      # MB de dist/ contra la meta de 20 MB
 ```
@@ -284,6 +302,7 @@ propio teléfono y es el único camino que funciona sin datos.
 ├─ app/            app web sin conexión (Vite + TypeScript): reglas, adaptadores, cuatro pantallas
 │  └─ public/      modelo, calibración, mensajes fijos, clips de audio, service worker
 ├─ api/            funciones de Vercel: enviar el SMS, frase opcional para el técnico
+├─ gateway/        gateway solo para la laptop (FastAPI + Ollama): /ws para el equipo, /api/sms sin internet
 ├─ ml/             manifiesto, entrenamiento, calibración, exportación ONNX, evaluación, audio
 ├─ tests/          pruebas unitarias y conjunto dorado de fotos propias
 ├─ docs/           imágenes de este README y la presentación
@@ -298,6 +317,8 @@ propio teléfono y es el único camino que funciona sin datos.
 | [BRACOL](https://data.mendeley.com/datasets/yy2k5y8mxg/1), Brasil | Entrenar, validar y probar (70/15/15 por hoja) | CC BY 4.0 | 1.747 hojas; pudimos leer 1.401 | Hojas peruanas; fotos de patio sobre un plato; ojo de gallo; deficiencias de nutrientes |
 | [Conjunto de Saposoa](https://data.mendeley.com/datasets/mfpxg4y65r/2), UNMSM, Perú | Solo evaluar: país no visto y abstención ante ojo de gallo | CC BY 4.0 | 1.500 imágenes | Minador, cercospora, phoma; es San Martín, no Cusco |
 | [MobileNetV3-small](https://huggingface.co/timm/mobilenetv3_small_100.lamb_in1k), timm | Red base, exportada a ONNX | Apache 2.0 | 5,8 MB tal como va en la app | Pruebas en café anteriores a la nuestra |
+| [Llama 3.2 3B](https://ollama.com/library/llama3.2), Meta, con Ollama en la laptop del equipo | Redactar la frase opcional para el técnico, sin internet, por la red local | Llama 3.2 Community License | Unos 2 GB, en la laptop, nunca en el teléfono | Quechua; conocimiento de café: solo reescribe los conteos |
+| Llama 3.1 8B, Meta, alojado (`meta/llama-3.1-8b` por Vercel AI Gateway) | La misma frase en el sitio desplegado cuando ninguna laptop responde | Llama 3.1 Community License | Alojado: no se descarga nada | Uso sin internet; es un servicio de terceros que recibe el código de parcela y los conteos |
 | [MMS-TTS quechua cusqueño](https://huggingface.co/facebook/mms-tts-quz) y español, Meta | Convertir en audio, por adelantado, los mensajes fijos y los números del 0 al 30 | CC BY-NC 4.0 (solo demo) | 78 clips, 0,65 MB en la app | Uso comercial; validación por un hablante nativo |
 
 Ninguno de los dos conjuntos tiene fotos hechas por caficultoras con un Android de gama baja.
@@ -324,7 +345,8 @@ grabaciones.
 | Clases | Cinco, más "no estoy seguro" | Añade ojo de gallo y deficiencias de nutrientes |
 | Modelo | Entrenado solo con hojas brasileñas | Reentrenado con fotos peruanas tomadas con consentimiento |
 | Idioma | Quechua traducido por máquina con voz sintética, rotulado como borrador | Frases validadas y grabadas por socias de la cooperativa |
-| Lista del técnico | Una página que ordena los códigos SMS pegados | Un Android en la cooperativa que lee los SMS y los une a su padrón de parcelas |
+| Mensaje para el técnico | El código, una frase fija y, con conexión, una frase redactada por un modelo de lenguaje pequeño | Lo mismo, con la redacción acordada con los técnicos de la cooperativa |
+| Lista del técnico | Una vista aparte que ordena los códigos SMS pegados | Un Android en la cooperativa que lee los SMS y los une a su padrón de parcelas |
 | Evidencia | Precisión en hojas apartadas y en hojas peruanas, tamaño del modelo y de la app | Un piloto de campo con una cooperativa que mida visitas, tiempos y cosecha |
 
 ## Lo que ya existe
@@ -352,6 +374,10 @@ de evidencia, no una prueba.
   herramienta no sirve.
 - Los datos de entrenamiento no tienen hojas de Cusco, y el conjunto peruano de prueba solo
   cubre sana y roya. La app no puede nombrar el ojo de gallo.
+- La frase de IA es una comodidad, no una evidencia. Repite los conteos, así que hereda los
+  errores del clasificador. El modelo alojado es un servicio de terceros que recibe el código
+  de parcela y los conteos; `AI_GATEWAY_MODEL=off` lo apaga y la herramienta funciona sin él.
+  Con las dos frases el SMS viaja en dos partes, lo que cuesta más.
 - El SMS sale del teléfono de la hija. El consentimiento de la familia y quién paga el
   mensaje son preguntas para el piloto.
 - La cobertura celular en Santa Teresa y que la cooperativa tenga técnico y padrón utilizables
@@ -379,7 +405,7 @@ de evidencia, no una prueba.
 
 ## Licencia
 
-MIT. Ver [LICENSE](LICENSE). Los datasets y los modelos de voz conservan sus propias licencias,
+MIT. Ver [LICENSE](LICENSE). Los datasets, los modelos de voz y los modelos de lenguaje conservan sus propias licencias,
 indicadas en [Datos y modelos](#datos-y-modelos).
 
 ---

@@ -2,6 +2,8 @@
 
 Fuente: `src/Leaf Plate blueprint técnico (1).pdf`. Reto 04 (Agricultura) – Small AI for Development.
 
+> Este es el plan original. Lo que se construyó y se midió está en [README.es.md](README.es.md). Diferencias principales: la app lleva el modelo sin cuantizar (`leaf-fp32.onnx`) porque int8 perdió precisión; el SMS lleva el código y una frase fija armada con reglas; la frase del LLM es opcional y la redacta la laptop (`gateway/`) o, en el sitio desplegado, un modelo pequeño alojado; la lista del técnico es una vista aparte (`#/tecnico`).
+
 **Decisión que apoya:** que Noor nombre el problema de sus hojas de café y avise al técnico de la cooperativa el mismo fin de semana, sin datos móviles.
 **IA:** clasificador de visión (5 clases + abstención) en el teléfono. En el último paso (Enviar), un LLM local opcional (`llama3.2:3b` en Ollama, en la laptop) redacta una frase para el técnico. Todo lo demás son reglas o contenido fijo.
 **Meta de tamaño:** < 20 MB en total (modelo int8 + onnxruntime-web + audio + código).

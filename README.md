@@ -6,7 +6,7 @@
   <img alt="Sector: agriculture" src="https://img.shields.io/badge/sector-agriculture-133f27">
   <img alt="The AI runs on the phone" src="https://img.shields.io/badge/AI-runs%20on%20the%20phone-1f6b3a">
   <img alt="Languages: Spanish, draft Quechua, English" src="https://img.shields.io/badge/languages-ES%20%C2%B7%20QU%20(draft)%20%C2%B7%20EN-1f6b3a">
-  <img alt="38 unit tests passing" src="https://img.shields.io/badge/unit%20tests-38%20passing-2e8b57">
+  <img alt="72 app tests and 244 gateway tests passing" src="https://img.shields.io/badge/tests-72%20app%20%C2%B7%20244%20gateway-2e8b57">
   <img alt="Status: hackathon prototype" src="https://img.shields.io/badge/status-hackathon%20prototype-c25a14">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-48534b">
 </p>
@@ -95,10 +95,13 @@ flowchart LR
     G --> H
     H --> I["Fixed message, text and audio:<br>Spanish, Quechua, English"]
     I --> J["She presses send:<br>one SMS"]
+    I -. "only with a connection" .-> L["A small language model<br>drafts one sentence,<br>checked against the counts"]
+    L -.-> J
     J --> K["Technician's list,<br>most affected first"]
 
     style D fill:#1f6b3a,stroke:#133f27,color:#ffffff
     style K fill:#133f27,stroke:#133f27,color:#ffffff
+    style L fill:#ffffff,stroke:#1f6b3a,color:#133f27,stroke-dasharray: 5 5
 ```
 
 Sampling follows the plant-and-branch pattern used to evaluate rust in Peru, simplified
@@ -119,21 +122,32 @@ plants and samples with many doubts). A link under the top bar switches between 
 
 ## What the AI does, and what it does not
 
-| The one thing AI does | Deliberately not AI |
-|---|---|
-| A small vision model (MobileNetV3-small, 5.8 MB) tells five leaf conditions apart: healthy, rust, leaf miner, cercospora, phoma. Below a calibrated confidence it says "not sure". | The photo quality filter (sharpness, brightness, leaf area) · counting the leaves · the plant-age question · the fixed messages and their audio · the SMS code · the technician's list and decision |
+| AI component | Where it runs | What it does | How it is kept in check |
+|---|---|---|---|
+| **Vision classifier** (MobileNetV3-small, 5.8 MB) | On the phone, with no network | Tells five leaf conditions apart: healthy, rust, leaf miner, cercospora, phoma | Below a calibrated confidence it says "not sure"; a rules-based filter rejects bad photos first |
+| **Small language model** (`llama3.2:3b` on the team's laptop, or `meta/llama-3.1-8b` hosted) | Off the phone, only when there is a connection | Writes one optional sentence for the technician from the counts | It receives only the plot code and the counts; a server checks the sentence against them; if it fails, the fixed sentence goes alone; the app labels it as written by AI and asks her to read it before sending |
 
-An SMS cannot look at a leaf. What an SMS can do, we leave to SMS.
+**Deliberately not AI:** the photo quality filter (sharpness, brightness, leaf area) · counting
+the leaves · the plant-age question · the fixed messages and their audio · the SMS code and
+its fixed sentence · the technician's list and decision.
+
+The core job, naming the leaf and building the SMS, needs only the first component and works
+without the second. An SMS cannot look at a leaf. What an SMS can do, we leave to SMS.
 
 **Guardrails**
 
 - A person makes the final call: she presses send, and the technician decides the control.
-- A fixed list of eight messages. Nothing is generated on the phone. The send screen always
+- What Noor reads and hears comes from a fixed list of eight messages. Nothing is generated
+  on the phone. The send screen always
   says: "This is not a diagnosis. Send the message to the cooperative's technician, who decides."
 - Low confidence becomes "not sure"; a bad photo is rejected and retaken. With many doubts, the
   message says the technician should look at the leaves.
 - No doses, treatments, yield or price.
-- Photos and counts stay on the phone. The SMS carries a plot code and counts only.
+- The only generated text is the optional sentence for the technician. The server that asks
+  for it accepts it only if it is one plain line that fits the SMS, uses exactly the numbers
+  of the counts and avoids a list of banned terms (doses, products, treatments, yield, price).
+- Photos stay on the phone. The plot code and the counts are all that leaves it: in the SMS
+  and, when there is a connection, to the service that writes the AI message.
 - The Quechua is labelled on screen as a machine translation that no speaker has validated.
 
 Under the code, the SMS carries a fixed sentence that the app builds from the counts with
@@ -177,10 +191,11 @@ the onnxruntime-web WASM.
 
 ## Status
 
-- [x] Domain logic with 38 unit tests: counting, messages, SMS round trip, ranking, photo quality, translations
+- [x] Domain logic and server functions with 72 unit tests: counting, messages, SMS round trip, ranking, photo quality, translations, the sentence service
 - [x] Four screens, in Spanish, Quechua (draft) and English
 - [x] The real model and the 78 audio clips, checked in Chrome against the deployment
 - [x] Server functions on Vercel for sending the SMS (Twilio or an Android phone gateway)
+- [x] The AI message for the technician on the deployment: on 4 October the live `/api/sms` returned a validated sentence from the hosted model
 - [x] Laptop gateway (FastAPI + Ollama 0.35.1, offline): `/ws` for the team's tools and `POST /api/sms` with validation and fallback, 244 tests, checked over the LAN
 - [ ] Offline mode verified on the Android phone (on the development laptop Chrome fails to cache the 14 MB WASM)
 - [ ] An SMS actually sent and received (the deployed server has no SMS credentials and answers `simulated`)
@@ -195,7 +210,7 @@ the onnxruntime-web WASM.
 ```
 npm install
 npm run dev       # development; --host lets you open it from a phone on the same network
-npm test          # unit tests: counting, messages, SMS round trip, ranking, photo quality
+npm test          # 72 unit tests: counting, messages, SMS, ranking, photo quality, server functions
 npm run build     # dist/ with service worker (offline mode)
 npm run size      # MB of dist/ against the 20 MB goal
 ```
@@ -322,6 +337,8 @@ rules, the tests (244) and the live checks are in [gateway/README.md](gateway/RE
 | [BRACOL](https://data.mendeley.com/datasets/yy2k5y8mxg/1), Brazil | Training, validation and test (70/15/15 by leaf) | CC BY 4.0 | 1,747 leaves; we could read 1,401 | Peruvian leaves; photos taken in a yard on a plate; ojo de gallo; nutrient deficiencies |
 | [Saposoa set](https://data.mendeley.com/datasets/mfpxg4y65r/2), UNMSM, Peru | Evaluation only: unseen country, and abstention on ojo de gallo | CC BY 4.0 | 1,500 images | Leaf miner, cercospora, phoma; it is San Martín, not Cusco |
 | [MobileNetV3-small](https://huggingface.co/timm/mobilenetv3_small_100.lamb_in1k), timm | Base network, exported to ONNX | Apache 2.0 | 5.8 MB as shipped | Any test on coffee before ours |
+| [Llama 3.2 3B](https://ollama.com/library/llama3.2), Meta, through Ollama on the team's laptop | Writing the optional sentence for the technician, offline over the local network | Llama 3.2 Community License | About 2 GB, on the laptop, never on the phone | Quechua; any knowledge of coffee: it only rewords the counts |
+| Llama 3.1 8B, Meta, hosted (`meta/llama-3.1-8b` through Vercel AI Gateway) | The same sentence on the deployed site when no laptop answers | Llama 3.1 Community License | Hosted: nothing to download | Use without internet; it is a third-party service that receives the plot code and counts |
 | [MMS-TTS Cusco Quechua](https://huggingface.co/facebook/mms-tts-quz) and Spanish, Meta | Rendering the fixed messages and the numbers 0 to 30 as audio, in advance | CC BY-NC 4.0 (demo only) | 78 clips, 0.65 MB in the app | Commercial use; validation by a native speaker |
 
 Neither image set has photos taken by farmers with a low-cost Android. Only our own golden
@@ -347,7 +364,8 @@ to translate and record 39 short clips, not a new model: the phone only plays re
 | Classes | Five, plus "not sure" | Adds ojo de gallo and nutrient deficiencies |
 | Model | Trained on Brazilian leaves only | Retrained with Peruvian photos taken with consent |
 | Language | Machine-translated Quechua with a synthetic voice, labelled as a draft | Phrases validated and recorded by cooperative members |
-| Technician's list | A page that sorts pasted SMS codes | An Android at the cooperative that reads SMS and joins them to its plot registry |
+| Message for the technician | The code, a fixed sentence and, with a connection, one sentence written by a small language model | The same, with the wording agreed with the cooperative's technicians |
+| Technician's list | A separate view that sorts pasted SMS codes | An Android at the cooperative that reads SMS and joins them to its plot registry |
 | Evidence | Accuracy on held-out and Peruvian leaves, model and app size | A field pilot with a cooperative that measures visits, times and harvest |
 
 ## What already exists
@@ -374,6 +392,10 @@ evidence, not proof.
   this tool does not work.
 - The training data has no leaves from Cusco, and the Peruvian test set covers only healthy
   and rust. The app cannot name ojo de gallo.
+- The AI sentence is a convenience, not evidence. It restates the counts, so it inherits the
+  classifier's errors. The hosted model is a third-party service that receives the plot code
+  and the counts; `AI_GATEWAY_MODEL=off` switches it off and the tool works without it. With
+  both sentences the SMS travels as two parts, which costs more.
 - The SMS leaves from the daughter's phone. The family's consent and who pays for the message
   are questions for the pilot.
 - Mobile coverage in Santa Teresa and a usable technician and registry at the cooperative are
@@ -401,7 +423,7 @@ evidence, not proof.
 
 ## License
 
-MIT. See [LICENSE](LICENSE). The datasets and the voice models keep their own licences, listed
+MIT. See [LICENSE](LICENSE). The datasets, the voice models and the language models keep their own licences, listed
 under [Data and models](#data-and-models).
 
 ---
