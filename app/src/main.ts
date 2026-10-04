@@ -1,6 +1,7 @@
 import "./style.css";
 import { loadClassifier } from "./adapters/classifier";
 import { stopAudio } from "./adapters/audio";
+import { isLocalAddress, normalizeServiceUrl } from "./adapters/smsService";
 import { storage } from "./adapters/storage";
 import { DEFAULT_LANG, isLang, LANG_INFO, LANGS, TextKey, translate } from "./domain/i18n";
 import { MessageCatalog } from "./domain/message";
@@ -49,6 +50,23 @@ function languageSwitch(app: App): HTMLElement {
   return group;
 }
 
+/**
+ * La laptop que redacta el mensaje de la IA no se configura en pantalla: no es cosa de la
+ * caficultora. El equipo la deja guardada en el teléfono abriendo una vez la app con
+ * ?laptop=192.168.43.1:8000 (con ?laptop= vacío se olvida). Solo vale una dirección de la red local.
+ */
+async function loadLaptopUrl(): Promise<string> {
+  const saved = await storage.loadServiceUrl();
+  const current = isLocalAddress(saved) ? saved : "";
+  const fromLink = new URLSearchParams(location.search).get("laptop");
+  if (fromLink === null) return current;
+  history.replaceState(null, "", location.pathname + location.hash);
+  const url = normalizeServiceUrl(fromLink);
+  if (url && !isLocalAddress(url)) return current;
+  await storage.saveServiceUrl(url);
+  return url;
+}
+
 async function start(): Promise<void> {
   const root = document.getElementById("app")!;
   const [catalog, classifier, sample, techNumber, serviceUrl, savedLang] = await Promise.all([
@@ -56,7 +74,7 @@ async function start(): Promise<void> {
     loadClassifier(),
     storage.loadCurrent(),
     storage.loadTechNumber(),
-    storage.loadServiceUrl(),
+    loadLaptopUrl(),
     storage.loadLang(),
   ]);
 

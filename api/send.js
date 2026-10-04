@@ -1,6 +1,7 @@
 // POST /api/send — envía de verdad el SMS al técnico.
 // El destinatario lo fija el servidor (TECH_NUMBER), nunca la app, y el texto tiene
 // que ser un código LP válido: así el servicio no sirve para mandar SMS arbitrarios.
+// Debajo del código pueden ir dos frases, cada una validada: la fija y el mensaje del modelo.
 //
 // Quién envía depende de las variables de entorno (en local, del archivo .env):
 //   - Twilio: TWILIO_ACCOUNT_SID + TWILIO_FROM y, para autenticarse,
@@ -93,7 +94,9 @@ export default async function handler(req, res) {
   const body = readJson(req);
   if (!body || !isCode(body.code)) return res.status(400).json({ error: "invalid code" });
   if (body.text != null && !isSentence(body.code, body.text)) return res.status(400).json({ error: "invalid text" });
-  const message = body.text ? `${body.code}\n${body.text}` : body.code;
+  if (body.ai != null && !isSentence(body.code, body.ai)) return res.status(400).json({ error: "invalid ai" });
+  // Debajo del código, una frase por línea: la fija (text) y el mensaje del modelo (ai).
+  const message = [body.code, body.text, body.ai].filter(Boolean).join("\n");
 
   if (!provider) return res.status(200).json({ status: "simulated", message });
   if (problem) return fail(res, 500, provider, problem);

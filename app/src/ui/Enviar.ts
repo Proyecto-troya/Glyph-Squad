@@ -1,14 +1,7 @@
-import {
-  normalizeServiceUrl,
-  requestSentence,
-  sendSms,
-  SMS_SEND_ENABLED,
-  SMS_SERVICE_ENABLED,
-  SmsResponse,
-} from "../adapters/smsService";
+import { requestAiSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
 import { storage } from "../adapters/storage";
 import { countLeaves } from "../domain/sample";
-import { buildSmsRequest, CodePart, codeParts, composeSms } from "../domain/sms";
+import { buildSmsRequest, CodePart, codeParts, composeSms, fixedSentence, smsSentences } from "../domain/sms";
 import { App, forgetLast } from "./app";
 import { el, emptyState, LABEL_KEYS, messageCard } from "./dom";
 import { icon } from "./icons";
@@ -21,47 +14,51 @@ export function renderEnviar(root: HTMLElement, app: App): void {
   }
   const request = buildSmsRequest(sample.plot, countLeaves(sample.leaves), sample.over15);
   const code = request.code;
-  // El código lo arma siempre la app y es igual en todos los idiomas; el LLM solo añade una frase debajo.
-  let sms = code;
+  // El código y la frase fija los arma siempre la app, con reglas y sin red, y son iguales en
+  // todos los idiomas. El modelo de la laptop añade otro mensaje debajo, cuando responde.
+  const fixedLine = smsSentences(code, fixedSentence(request))[0] ?? null;
+  let aiLine: string | null = null;
+  let sms = composeSms(code, fixedLine);
 
   // La app no envía nada: solo abre la app de SMS con el texto listo y ella pulsa enviar.
   const link = el("a", { class: SMS_SEND_ENABLED ? "button big" : "button primary big" }, icon("message"), app.t("openSms"));
   const codeBox = el("p", { class: "code" }, code);
-  const sentenceBox = el("p", { class: "sentence" });
-  const sentenceLabel = el("p", { class: "hint" });
+  // El mensaje de la IA va en su propio recuadro: es otro mensaje, aparte de la frase fija.
+  const aiBox = el("p", { class: "sentence" });
+  const aiLabel = el("p", { class: "hint" });
+  const aiCard = el("div", { class: "ai-message", hidden: true }, aiBox, aiLabel);
   const setLink = () => {
     link.href = `sms:${app.techNumber.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(sms)}`;
   };
 
-  const showSentence = (response: SmsResponse | null) => {
-    sms = composeSms(code, response?.text);
-    const used = sms !== code;
-    sentenceBox.textContent = used ? sms.slice(code.length + 1) : "";
-    // Se dice de dónde salió la frase: del modelo o de la plantilla fija del servidor.
-    sentenceLabel.textContent = app.t(!used ? "sentenceNone" : response?.source === "llm" ? "sentenceAi" : "sentenceTemplate");
+  const showAi = (text: string | null) => {
+    aiLine = smsSentences(code, text)[0] ?? null;
+    // Lo que se ve es lo que se envía: el código, la frase fija y, si llegó, el mensaje de la IA.
+    sms = composeSms(code, fixedLine, aiLine);
+    aiBox.textContent = aiLine ?? "";
+    aiLabel.replaceChildren(...(aiLine ? [icon("local-ai"), app.t("sentenceAi")] : []));
+    aiCard.hidden = !aiLine;
     setLink();
   };
 
-  let asked = 0;
-  const askSentence = async () => {
-    const turn = ++asked;
-    // Mientras llega la respuesta el mensaje es solo el código: lo que se ve es lo que se envía.
-    sms = code;
-    setLink();
-    sentenceBox.textContent = "";
-    sentenceLabel.textContent = app.t("sentenceAsking");
-    const response = await requestSentence(app.serviceUrl, request);
-    // Si entretanto se pidió otra vez (cambió la dirección), vale la última petición.
-    if (turn !== asked) return;
-    app.sentence = { code, response };
+  const askAi = async () => {
+    // El aviso de espera sale solo si la respuesta tarda: sin laptop, el servidor contesta enseguida que no hay.
+    const waiting = setTimeout(() => {
+      aiLabel.textContent = app.t("sentenceAsking");
+      aiCard.hidden = false;
+    }, 400);
+    const text = await requestAiSentence(app.serviceUrl, request);
+    clearTimeout(waiting);
+    // Solo se recuerda el mensaje que llegó: si no hubo, se vuelve a pedir al volver a esta pantalla.
+    if (text) app.sentence = { code, ai: text };
     // Si mientras tanto cambió la pantalla, estos nodos ya no están a la vista y no pasa nada.
-    showSentence(response);
+    showAi(text);
   };
 
   setLink();
   if (SMS_SERVICE_ENABLED) {
-    if (app.sentence?.code === code) showSentence(app.sentence.response);
-    else void askSentence();
+    if (app.sentence?.code === code) showAi(app.sentence.ai);
+    else void askAi();
   }
 
   const number = el("input", { type: "tel", value: app.techNumber, placeholder: app.t("techNumberPlaceholder") });
@@ -70,16 +67,6 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     void storage.saveTechNumber(number.value);
     setLink();
   };
-
-  const server = el("input", { type: "url", value: app.serviceUrl, placeholder: "http://192.168.43.1:8000" });
-  server.onchange = () => {
-    // Se guarda como se va a llamar: "192.168.43.1:8000" pasa a llevar http:// delante.
-    server.value = app.serviceUrl = normalizeServiceUrl(server.value);
-    void storage.saveServiceUrl(app.serviceUrl);
-    void askSentence();
-  };
-  const retry = el("button", { type: "button" }, icon("refresh"), app.t("sentenceRetry"));
-  retry.onclick = () => void askSentence();
 
   const copy = el("button", { type: "button" }, icon("copy"), app.t("copy"));
   copy.onclick = async () => {
@@ -107,7 +94,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     sendButton.disabled = true;
     delete sendStatus.dataset.state;
     sendStatus.textContent = app.t("sending");
-    const status = await sendSms(code, sms === code ? null : sms.slice(code.length + 1));
+    const status = await sendSms(code, fixedLine, aiLine);
     sendButton.disabled = status === "queued";
     // El punto de .status late solo mientras se envía; al terminar queda fijo o, si no salió, en aviso.
     sendStatus.dataset.state = status === "queued" ? "done" : "fail";
@@ -125,8 +112,9 @@ export function renderEnviar(root: HTMLElement, app: App): void {
       el("h2", {}, app.t("yourMessage")),
       codeBox,
       codeMeaning(code, app),
-      sentenceBox,
-      sentenceLabel,
+      fixedLine && el("p", { class: "sentence" }, fixedLine),
+      fixedLine && el("p", { class: "hint" }, app.t("sentenceTemplate")),
+      aiCard,
       el("p", { class: "hint" }, app.t("privacyHint")),
     ),
     SMS_SEND_ENABLED ? sendButton : "",
@@ -135,19 +123,6 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     link,
     el("div", { class: "row" }, copy, restart),
   );
-  if (SMS_SERVICE_ENABLED) {
-    root.append(
-      el(
-        "details",
-        {},
-        el("summary", {}, app.t("laptopSummary")),
-        el("label", {}, app.t("serverLabel"), server),
-        // Las dos cosas por las que la laptop no contesta aunque esté encendida.
-        el("p", { class: "hint" }, app.t("laptopHint", { origin: location.origin })),
-        retry,
-      ),
-    );
-  }
 }
 
 /** Lo que significa cada pieza del código, para que ella sepa qué envía y el técnico lo lea sin manual. */

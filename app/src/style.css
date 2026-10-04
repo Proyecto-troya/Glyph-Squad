@@ -601,6 +601,13 @@ label:has(+ .error:not(:empty)) input { border-color: var(--danger); }
 .code::selection { background: var(--mint); color: var(--forest); }
 .sentence { margin: 8px 0 0; font-size: 1.05rem; overflow-wrap: anywhere; }
 .sentence:empty { display: none; }
+/* El mensaje de la IA es otro mensaje, aparte de la frase fija. Borde discontinuo: lo tiene
+   que leer una persona antes de enviarlo. */
+.ai-message { margin: 14px 0 4px; padding: 12px 14px; background: var(--paper); border: 1.5px dashed var(--line-strong); border-radius: var(--radius-inner); }
+.ai-message .sentence { margin: 0; }
+.ai-message .hint { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0 0; }
+.ai-message .sentence:empty + .hint { margin: 0; }
+.ai-message .icon { margin-top: 0.1em; color: var(--green); }
 
 a.button { width: 100%; }
 /* "Abrir SMS para el técnico" es el texto más largo de un botón grande: un poco menos de letra
@@ -617,8 +624,6 @@ details {
 summary { display: flex; align-items: center; min-height: 54px; color: var(--muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; }
 details[open] { padding-bottom: 18px; }
 details > button { width: 100%; }
-/* La dirección de la app dentro del aviso no tiene espacios: que parta donde haga falta. */
-details > .hint { overflow-wrap: anywhere; }
 
 /* ---------- Técnico ---------- */
 

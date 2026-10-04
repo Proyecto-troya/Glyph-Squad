@@ -29,10 +29,13 @@
 
 Noor photographs 30 coffee leaves on a plate. The app names the problem on each leaf (or says
 "not sure") and prepares an SMS with the plot code and the counts for the cooperative's field
-technician. The only thing that leaves the phone is the SMS she chooses to send.
+technician. What leaves the phone is the SMS she chooses to send and, when there is a
+connection, the same plot code and counts, which go to the service that writes the AI message.
 
-The only AI is the vision classifier (5 classes plus abstention). The counting, the messages,
-the SMS code, the photo quality filter and the technician's list are all rules.
+The only AI on the phone is the vision classifier (5 classes plus abstention). The counting,
+the messages, the SMS code, the photo quality filter and the technician's list are all rules.
+When the team's laptop is reachable, a small language model on it adds one more message for
+the technician.
 
 <p align="center">
   <img src="docs/screens/muestra-es.jpg" alt="First screen in Spanish: enter the plot code and start a sample of 30 leaves" width="250">
@@ -133,15 +136,15 @@ An SMS cannot look at a leaf. What an SMS can do, we leave to SMS.
 - Photos and counts stay on the phone. The SMS carries a plot code and counts only.
 - The Quechua is labelled on screen as a machine translation that no speaker has validated.
 
-Under the code, the SMS can carry one sentence for the technician (`SMS_SERVICE_ENABLED` in
-`app/src/adapters/smsService.ts`, switched on). The code itself is always built by the app.
-With the laptop's address set on the Enviar screen ("Laptop que redacta la frase"), the
-sentence comes from the laptop gateway described below (`gateway/`, `POST /api/sms`): the
-model runs on the laptop, never on the phone, and the server validates every sentence against
-the counts and falls back to a fixed template. With no address, the server that serves the
-app answers with its own fixed template (`api/sms.js`). The screen says whether the sentence
-was written by the model or comes from a template, and the phone sends the code alone
-whenever nobody answers within 10 seconds.
+Under the code, the SMS carries a fixed sentence that the app builds from the counts with
+rules, on the phone and with no network. When the team's laptop is reachable, a second
+message written by its language model goes under it (`SMS_SERVICE_ENABLED` in
+`app/src/adapters/smsService.ts`). The app asks `POST /api/sms`; the laptop gateway described
+below (`gateway/`) has the model write one sentence and validates it against the counts. The
+model runs on the laptop, never on the phone. The app shows that message only when the model
+wrote it, in its own box labelled as written by AI. With no laptop, the SMS carries the code
+and the fixed sentence. With both sentences the SMS is longer than 160 characters and travels
+as two parts.
 
 ## Results
 
@@ -236,9 +239,10 @@ Production: https://leaf-plate-kappa.vercel.app (deployed with `npx vercel deplo
     [SMS Gateway for Android](https://github.com/capcom6/android-sms-gateway) in Cloud Server
     mode; the SMS goes out through its SIM.
   - None: it answers `simulated` and sends nothing.
-- `POST /api/sms` returns the sentence for the technician: a fixed template, or an LLM if
-  `OLLAMA_URL` points to a reachable Ollama server. This is the online stand-in; the version
-  the plan describes runs on the demo laptop (next section).
+- `POST /api/sms` returns one sentence for the technician. The laptop's model writes it if
+  `GATEWAY_URL` points to a reachable gateway (next section), or an Ollama server at
+  `OLLAMA_URL` does; otherwise it is the fixed template. The app shows it as the AI message
+  only when a model wrote it.
 
 Secrets go in `.env`, at the project root, which is not committed to git. `npm run dev` and
 `npm run preview` serve `/api/*` using that file. `npm run secrets:check` asks Twilio whether
@@ -271,13 +275,25 @@ cp .env.example .env                   # set GATEWAY_TOKEN and the laptop's LAN 
 set -a; source .env; set +a; python -m gateway
 ```
 
-To use it from the app: run the gateway with `GATEWAY_PORT=8000` and the app's address in
-`GATEWAY_ALLOWED_ORIGINS` (the Enviar screen shows the exact value), then type the laptop's
-address under "Laptop que redacta la frase". Only the sentence comes from the laptop; the
-SMS is still sent by the server that serves the app, or by the phone's own SIM. From the
-https deployment, Chrome lets the page call the laptop only after the site is granted its
-local-network permission (checked with desktop Chrome 154: the call fails without the
-permission and works with it; not yet tried on the Android phone).
+The app has no screen for the laptop's address, because it is not the farmer's concern. There
+are two ways to connect the app to the gateway:
+
+- **A setup link, once per phone.** Open the app with `?laptop=<laptop-ip>:8000`, for example
+  `https://leaf-plate-kappa.vercel.app/?laptop=192.168.43.57:8000`. The address is stored on
+  that phone, and `?laptop=` with no value forgets it. Only IP addresses of the local network
+  are accepted. The gateway needs `GATEWAY_PORT=8000` and the app's address in
+  `GATEWAY_ALLOWED_ORIGINS`. From the https deployment, Chrome lets the page call the laptop
+  only after the site is granted its local-network permission (checked with desktop Chrome
+  154: the call fails without the permission and works with it; not yet tried on the Android
+  phone).
+- **Through the server that serves the app.** Set `GATEWAY_URL` in `.env` or on Vercel, plus
+  `GATEWAY_TOKEN` if the gateway runs with `GATEWAY_SMS_REQUIRE_TOKEN=true`. `api/sms.js`
+  then asks the gateway itself and the phone needs no setup. On the laptop (`npm run preview`)
+  `GATEWAY_URL=http://127.0.0.1:8000` is enough; Vercel needs an address it can reach from
+  the internet.
+
+Only the AI message comes from the laptop. The SMS is still sent by the server that serves
+the app, or by the phone's own SIM.
 
 Setup of the Ollama server, the protocol, every action with an example, the SMS validation
 rules, the tests (244) and the live checks are in [gateway/README.md](gateway/README.md).

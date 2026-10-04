@@ -29,10 +29,14 @@
 
 Noor fotografía 30 hojas de café sobre un plato, la app nombra el problema de cada hoja
 (o dice "no estoy seguro") y prepara un SMS con el código de parcela y los conteos para el
-técnico de la cooperativa. Lo único que sale del teléfono es el SMS que ella pulsa enviar.
+técnico de la cooperativa. Del teléfono sale el SMS que ella pulsa enviar y, cuando hay
+conexión, el mismo código de parcela con sus conteos, que va al servicio que redacta el
+mensaje de la IA.
 
-La única IA es el clasificador de visión (5 clases + abstención). El conteo, los mensajes,
-el código SMS, el filtro de calidad de la foto y la lista del técnico son reglas.
+La única IA en el teléfono es el clasificador de visión (5 clases + abstención). El conteo,
+los mensajes, el código SMS, el filtro de calidad de la foto y la lista del técnico son
+reglas. Cuando la laptop del equipo está al alcance, un modelo de lenguaje pequeño que corre
+en ella añade un mensaje más para el técnico.
 
 <p align="center">
   <img src="docs/screens/muestra-es.jpg" alt="Primera pantalla en español: escribir el código de parcela y empezar una muestra de 30 hojas" width="250">
@@ -137,14 +141,32 @@ Un SMS no puede mirar una hoja. Lo que un SMS sí puede hacer, se lo dejamos al 
 - Las fotos y el conteo se quedan en el teléfono. El SMS lleva solo código de parcela y conteos.
 - El quechua está rotulado en pantalla como traducción automática sin validar por hablante.
 
-Debajo del código, el SMS puede llevar una frase para el técnico (`SMS_SERVICE_ENABLED` en
-`app/src/adapters/smsService.ts`, encendido). El código lo arma siempre la app. Con la
-dirección de la laptop puesta en la pantalla Enviar ("Laptop que redacta la frase"), la frase
-viene del gateway de la laptop (`gateway/`, `POST /api/sms`): el modelo corre en la laptop,
-nunca en el teléfono, y el servidor valida cada frase contra los conteos y, si falla, usa una
-plantilla fija. Sin dirección, responde con su propia plantilla fija el servidor que sirve la
-app (`api/sms.js`). La pantalla dice si la frase la redactó el modelo o es de plantilla, y el
-teléfono envía solo el código cuando nadie responde en 10 segundos.
+Debajo del código, el SMS lleva una frase fija que la app arma con reglas a partir de los
+conteos, en el teléfono y sin red. Cuando la laptop del equipo está al alcance, debajo va un
+segundo mensaje redactado por su modelo de lenguaje (`SMS_SERVICE_ENABLED` en
+`app/src/adapters/smsService.ts`). La app pregunta a `POST /api/sms`; el gateway de la laptop
+(`gateway/`) hace que el modelo redacte una frase y la valida contra los conteos. El modelo
+corre en la laptop, nunca en el teléfono. La app muestra ese mensaje solo cuando lo redactó
+el modelo, en su propio recuadro y rotulado como escrito por IA. Sin laptop, el SMS lleva el
+código y la frase fija. Con las dos frases el SMS pasa de 160 caracteres y viaja en dos
+partes.
+
+La app no tiene pantalla para la dirección de la laptop, porque no es cosa de la caficultora.
+Hay dos formas de conectarlas:
+
+- **Un enlace de preparación, una vez por teléfono.** Abrir la app con
+  `?laptop=<ip-de-la-laptop>:8000`, por ejemplo
+  `https://leaf-plate-kappa.vercel.app/?laptop=192.168.43.57:8000`. La dirección queda guardada
+  en ese teléfono y `?laptop=` sin valor la olvida. Solo valen direcciones IP de la red local.
+  El gateway necesita `GATEWAY_PORT=8000` y la dirección de la app en
+  `GATEWAY_ALLOWED_ORIGINS`. Desde el despliegue en https, Chrome solo deja llamar a la laptop
+  si el sitio tiene el permiso de red local (comprobado con Chrome 154 de escritorio; falta
+  probarlo en el teléfono Android).
+- **A través del servidor que sirve la app.** Poner `GATEWAY_URL` en `.env` o en Vercel, y
+  `GATEWAY_TOKEN` si el gateway corre con `GATEWAY_SMS_REQUIRE_TOKEN=true`. Entonces
+  `api/sms.js` pregunta él mismo al gateway y el teléfono no necesita preparación. En la laptop
+  (`npm run preview`) basta `GATEWAY_URL=http://127.0.0.1:8000`; Vercel necesita una dirección
+  que alcance desde internet.
 
 ## Resultados
 
@@ -237,8 +259,10 @@ Producción: https://leaf-plate-kappa.vercel.app (se despliega con `npx vercel d
     [SMS Gateway for Android](https://github.com/capcom6/android-sms-gateway) en modo Cloud
     Server; el SMS sale por su SIM.
   - Ninguna: responde `simulated` y no envía nada.
-- `POST /api/sms` devuelve la frase para el técnico: plantilla fija, o un LLM si `OLLAMA_URL`
-  apunta a un servidor Ollama alcanzable.
+- `POST /api/sms` devuelve una frase para el técnico. La redacta el modelo de la laptop si
+  `GATEWAY_URL` apunta a un gateway alcanzable, o un servidor Ollama en `OLLAMA_URL`; si no,
+  es la plantilla fija. La app la muestra como mensaje de la IA solo cuando la redactó un
+  modelo.
 
 Los secretos van en `.env`, en la raíz del proyecto, que no se sube a git. `npm run dev` y
 `npm run preview` atienden `/api/*` con ese archivo. `npm run secrets:check` pregunta a Twilio

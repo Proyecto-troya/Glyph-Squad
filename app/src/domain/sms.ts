@@ -98,33 +98,75 @@ export function buildSmsRequest(plot: string, counts: Counts, over15: boolean | 
   };
 }
 
+const SENTENCE_NAMES: Record<(typeof TOKENS)[number][1], string> = {
+  roya: "con roya",
+  minador: "con minador",
+  cercospora: "con cercospora",
+  phoma: "con phoma",
+  duda: "dudosas",
+};
+
 /**
- * SMS final: el código y, debajo, la frase redactada por el LLM.
- * El contenido de la frase lo valida el servidor; aquí solo se comprueba que
- * no rompa el SMS. Si no vale (o no hay frase), sale solo el código.
+ * Frase fija para el técnico: los conteos del código, en palabras. La arman reglas en el
+ * teléfono, sin IA y sin red, con la misma plantilla que usa el servidor (api/_lib.js).
  */
-export function composeSms(code: string, sentence: string | null | undefined): string {
-  const text = sentence?.trim() ?? "";
-  const fits = code.length + 1 + text.length <= SMS_MAX_LENGTH;
-  const plain = /^[\x20-\x7E]+$/.test(text) && !text.toUpperCase().includes("LP ");
-  return fits && plain ? `${code}\n${text}` : code;
+export function fixedSentence({ plot, counts, over15, code }: SmsRequest): string {
+  const parts = TOKENS.filter(([, key]) => counts[key] > 0).map(([, key]) => `${counts[key]} ${SENTENCE_NAMES[key]}`);
+  const base = parts.length
+    ? `Parcela ${plot}: de ${counts.total} hojas, ${parts.join(", ")}.`
+    : `Parcela ${plot}: ${counts.total} hojas revisadas, sin senales de enfermedad.`;
+  const withAge = over15 ? `${base} Plantas de mas de 15 anos.` : base;
+  return code.length + 1 + withAge.length <= SMS_MAX_LENGTH ? withAge : base;
+}
+
+/**
+ * Las frases que pueden ir debajo del código, ya limpias; la que no vale queda fuera.
+ * El contenido del mensaje del modelo lo valida el servidor que lo redacta; aquí solo se
+ * comprueba que no rompa el SMS: una línea ASCII, sin otro código, que quepa junto al código.
+ */
+export function smsSentences(code: string, ...sentences: (string | null | undefined)[]): string[] {
+  return sentences
+    .map((sentence) => sentence?.trim() ?? "")
+    .filter(
+      (text) =>
+        /^[\x20-\x7E]+$/.test(text) &&
+        !text.toUpperCase().includes("LP ") &&
+        code.length + 1 + text.length <= SMS_MAX_LENGTH,
+    );
+}
+
+/** SMS final: el código y, debajo, una frase por línea (la fija y el mensaje del modelo). */
+export function composeSms(code: string, ...sentences: (string | null | undefined)[]): string {
+  return [code, ...smsSentences(code, ...sentences)].join("\n");
 }
 
 /** Separa un texto pegado (un código por línea) en códigos válidos y líneas que no se entienden. */
 export function parseCodes(text: string): { payloads: SmsPayload[]; invalid: string[] } {
   const payloads: SmsPayload[] = [];
   const invalid: string[] = [];
-  let afterCode = false;
+  // Debajo de un código van las frases de su SMS, que no se usan para ordenar: la fija, que
+  // empieza por "Parcela <parcela>", y una línea libre, el mensaje del modelo.
+  let plot: string | null = null;
+  let freeLine = false;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
     // Tolera texto alrededor (p. ej. hora o remitente copiados con el SMS).
     const start = line.toUpperCase().indexOf("LP ");
     const payload = start >= 0 ? decodeSms(line.slice(start)) : null;
-    if (payload) payloads.push(payload);
-    // La línea que sigue a un código es la frase del SMS: no se usa para ordenar.
-    else if (!afterCode) invalid.push(line);
-    afterCode = payload !== null;
+    if (payload) {
+      payloads.push(payload);
+      plot = payload.plot;
+      freeLine = true;
+    } else if (plot && line.toUpperCase().startsWith(`PARCELA ${plot}`)) {
+      continue;
+    } else if (freeLine && start < 0) {
+      // Una línea con "LP " que no se entiende es un código mal escrito, no una frase.
+      freeLine = false;
+    } else {
+      invalid.push(line);
+      plot = null;
+    }
   }
   return { payloads, invalid };
 }

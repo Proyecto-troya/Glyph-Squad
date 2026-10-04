@@ -18,6 +18,8 @@ const KNOWN = {
   SMS_GATEWAY_URL: /^https?:\/\/\S+$/,
   OLLAMA_URL: /^https?:\/\/\S+$/,
   OLLAMA_MODEL: /^\S+$/,
+  GATEWAY_URL: /^https?:\/\/\S+$/,
+  GATEWAY_TOKEN: /^\S+$/,
 };
 
 const args = process.argv.slice(2);
