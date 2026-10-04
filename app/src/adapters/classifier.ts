@@ -17,6 +17,8 @@ export interface Classifier {
 
 /** Lo escribe ml/calibrate.py junto al modelo. */
 export interface Calibration {
+  /** Archivo del modelo en models/: leaf-int8.onnx, o leaf-fp32.onnx si int8 perdió precisión. */
+  model: string;
   labels: LeafLabel[];
   temperature: number;
   threshold: number;
@@ -25,7 +27,6 @@ export interface Calibration {
   std: [number, number, number];
 }
 
-const MODEL_URL = "models/leaf-int8.onnx";
 const CALIBRATION_URL = "models/calibration.json";
 
 export async function loadClassifier(): Promise<Classifier> {
@@ -44,7 +45,7 @@ async function createOnnxClassifier(calibration: Calibration): Promise<Classifie
   const ort = await import("onnxruntime-web/wasm");
   // Vite empaqueta el .wasm con la app (sin CDN). Un solo hilo no exige cabeceras COOP/COEP.
   ort.env.wasm.numThreads = 1;
-  const session = await ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"] });
+  const session = await ort.InferenceSession.create(`models/${calibration.model}`, { executionProviders: ["wasm"] });
   const size = calibration.inputSize;
 
   return {

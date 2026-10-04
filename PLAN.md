@@ -3,15 +3,16 @@
 Fuente: `src/Leaf Plate blueprint técnico (1).pdf`. Reto 04 (Agricultura) – Small AI for Development.
 
 **Decisión que apoya:** que Noor nombre el problema de sus hojas de café y avise al técnico de la cooperativa el mismo fin de semana, sin datos móviles.
-**Única IA:** clasificador de visión (5 clases + abstención). Todo lo demás son reglas o contenido fijo.
+**IA:** clasificador de visión (5 clases + abstención) en el teléfono. En el último paso (Enviar), un LLM local opcional (`llama3.2:3b` en Ollama, en la laptop) redacta una frase para el técnico. Todo lo demás son reglas o contenido fijo.
 **Meta de tamaño:** < 20 MB en total (modelo int8 + onnxruntime-web + audio + código).
 
 ---
 
 ## 0. Principios (no negociables)
 
-- [ ] Funciona sin conexión; lo único que sale es un SMS que **ella** pulsa enviar.
-- [ ] Fail-safe: confianza baja o foto mala → "no estoy seguro" / repetir foto. Sin generación libre de texto.
+- [ ] Funciona sin conexión; lo único que sale es un SMS que **ella** pulsa enviar. El LLM vive en la laptop (hotspot, sin internet): si no se alcanza, el SMS lleva solo el código.
+- [ ] Fail-safe: confianza baja o foto mala → "no estoy seguro" / repetir foto. Los mensajes a Noor son fijos, sin generación libre. El único texto generado es la frase del SMS al técnico: se valida en el servidor y, si falla, se usa una plantilla fija.
+- [ ] El código `LP ...` lo arma siempre la app, nunca el LLM; la lista del técnico depende de él.
 - [ ] Sin dosis, tratamientos, rendimiento ni precio.
 - [ ] Privacidad: fotos y conteo solo en el teléfono; el SMS lleva código de parcela + conteos, sin datos personales.
 - [ ] Quechua rotulado como "traducción automática y voz sintética, sin validar por hablante", con español siempre al lado.
@@ -45,6 +46,20 @@ interface PlotRow { plot: string; sickPct: number; counts: Counts; over15: boole
 **Formato SMS** (< 160 car., una línea): `LP <parcela> <total>H [ROYA<n>] [MIN<n>] [CER<n>] [PHO<n>] [DUDA<n>] [E15+]`
 Ej.: `LP P114 30H ROYA7 CER1 DUDA2 E15+`. Clases en 0 se omiten; `E15+` solo si respondió sí.
 
+**Servicio LLM (último paso, lo desarrolla otra persona):** `POST /api/sms` en el servidor FastAPI de la laptop (`:8000`), que llama a Ollama (`:11434`, `llama3.2:3b`, `temperature` 0, `stream` false, salida JSON, tiempo límite 10 s).
+
+```ts
+// Petición: sin datos personales, solo lo que ya va en el código.
+interface SmsRequest { plot: string; counts: Counts; over15: boolean; flagUnsure: boolean; code: string; }
+// Respuesta: una frase en español para el técnico.
+interface SmsResponse { text: string; source: "llm" | "fallback"; }
+```
+
+El SMS final son dos líneas: el código y la frase. Ej.:
+`LP P114 30H ROYA7 CER1 DUDA2 E15+` + salto de línea + `Parcela P114: 7 de 30 hojas con roya, 1 con cercospora, 2 dudosas. Plantas de mas de 15 anos.`
+
+Validación en el servidor (si falla → plantilla fija, `source: "fallback"`): código + frase ≤ 160 caracteres; solo ASCII (sin tildes ni ñ, para no bajar el límite a 70); todos los números de la frase salen de la petición y ningún conteo distinto de 0 se omite; sin dosis, productos, tratamientos, rendimiento ni precio; una sola línea que no contenga `LP `.
+
 **Mensajes fijos (`messages.json`)**: M01 sin enfermas · M02–M05 roya/minador/cercospora/phoma (`{n} de {total}`) · M06 dudas > 20 % · M07 foto rechazada · M08 antes de enviar.
 
 ## 3. Plan por flujo de trabajo (4 personas en paralelo, 8 h)
@@ -73,7 +88,7 @@ Ej.: `LP P114 30H ROYA7 CER1 DUDA2 E15+`. Clases en 0 se omiten; `E15+` solo si 
 | 0:00–0:30 | Crear repo y contratos de datos. |
 | 0:30–2:00 | 3 pantallas (Muestra, Resultado, Enviar) con **clasificador de mentira**; enlace `sms:<número>?body=<texto>` prellenado. **Puerta hora 2**: recorrido completo con modelo falso. |
 | 2:00–4:00 | Integrar `onnxruntime-web` (WASM) + `calibration.json`; pregunta de edad; audio Opus; `storage.ts` (IndexedDB). **Puerta hora 4**: modelo real en el teléfono. |
-| 4:00–6:00 | Service worker / modo sin conexión en un Android real; ajustar umbrales de calidad con ~30 fotos propias. **Hora 6: congelar funciones.** |
+| 4:00–6:00 | Service worker / modo sin conexión en un Android real; ajustar umbrales de calidad con ~30 fotos propias. Pantalla Enviar: pedir la frase a `POST /api/sms` (dirección del servidor configurable, espera máx. 10 s) y añadirla como segunda línea del SMS; si no responde, enviar solo el código. Rotular la frase como "redactada por IA". **Hora 6: congelar funciones.** |
 | 6:00–7:30 | Medir MB y s/foto; corregir fallos, sin funciones nuevas. |
 | 7:30–8:00 | Ensayo completo con datos apagados. |
 
@@ -113,8 +128,8 @@ Pruebas automáticas: unitarias (conteo, elección de mensaje, SMS ida/vuelta, o
 3. Varias hojas → conteo acumulado.
 4. Algo que no es café / foto movida → "no estoy seguro" o repetir.
 5. Pregunta de edad + audio quechua y español.
-6. Botón → SMS prellenado → enviar → llega a teléfono básico.
-7. Pegar ese código + 3 más en la página del técnico → lista ordenada.
+6. Botón → la laptop (hotspot, sin internet) redacta la frase con el LLM → SMS prellenado con código + frase → enviar → llega a teléfono básico. Repetir con la laptop apagada: sale solo el código.
+7. Pegar ese SMS + 3 más en la página del técnico → lista ordenada (lee la línea del código e ignora la frase).
 8. Cerrar con la tabla de medidas.
 
 ## 7. Riesgos y plan B
@@ -127,6 +142,9 @@ Pruebas automáticas: unitarias (conteo, elección de mensaje, SMS ida/vuelta, o
 | int8 pierde precisión | Usar 16 bits o sin cuantizar; reportar tamaño real. |
 | App lenta en Android barato | Bajar resolución de entrada; medir y declarar. |
 | `sms:` se comporta distinto | Mostrar el código en grande para copiarlo. |
+| El LLM inventa cifras o recomienda tratamientos | Validación en el servidor y plantilla fija; el código nunca pasa por el LLM. |
+| Laptop fuera de alcance o LLM lento | Espera máx. 10 s y SMS solo con el código. |
+| App en HTTPS no puede llamar a la laptop por HTTP | Servir la app desde el mismo servidor FastAPI (`static/`) o darle HTTPS local. |
 | Cámara exige HTTPS | HTTPS local o selector de archivos con cámara nativa. |
 | "30 hojas no representan la parcela" | Simplificación del muestreo SENASA (10 plantas × 3 ramas); decide el técnico. |
 

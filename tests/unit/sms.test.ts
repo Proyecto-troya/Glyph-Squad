@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { Counts, emptyCounts } from "../../app/src/domain/sample";
-import { decodeSms, encodeSms, parseCodes, SMS_MAX_LENGTH } from "../../app/src/domain/sms";
+import {
+  buildSmsRequest,
+  composeSms,
+  decodeSms,
+  encodeSms,
+  parseCodes,
+  SMS_MAX_LENGTH,
+} from "../../app/src/domain/sms";
 
 const counts = (partial: Partial<Counts>): Counts => ({ ...emptyCounts(), ...partial });
 
@@ -51,8 +58,40 @@ describe("código SMS", () => {
   });
 
   it("separa lo pegado en códigos y líneas que no se entienden", () => {
-    const { payloads, invalid } = parseCodes("lp p027 30h\n\n12:40 LP P203 28H ROYA15 MIN3\nbuenos días");
+    const { payloads, invalid } = parseCodes("buenos días\nlp p027 30h\n\n12:40 LP P203 28H ROYA15 MIN3");
     expect(payloads.map((p) => p.plot)).toEqual(["P027", "P203"]);
     expect(invalid).toEqual(["buenos días"]);
+  });
+
+  it("la lista del técnico se salta la frase que sigue a cada código", () => {
+    const sms = composeSms("LP P114 30H ROYA7", "Parcela P114: 7 de 30 hojas con roya.");
+    const { payloads, invalid } = parseCodes(`${sms}\nLP P027 30H\nSin hojas enfermas.\notra cosa`);
+    expect(payloads.map((p) => p.plot)).toEqual(["P114", "P027"]);
+    expect(invalid).toEqual(["otra cosa"]);
+  });
+});
+
+describe("SMS con la frase del LLM", () => {
+  const code = "LP P114 30H ROYA7 CER1 DUDA2 E15+";
+
+  it("arma la petición al servicio solo con lo que ya va en el código", () => {
+    const c = counts({ total: 30, sana: 20, roya: 7, cercospora: 1, duda: 2 });
+    expect(buildSmsRequest("P114", c, true)).toEqual({ plot: "P114", counts: c, over15: true, flagUnsure: false, code });
+    expect(buildSmsRequest("P114", c, null).over15).toBe(false);
+  });
+
+  it("pone la frase debajo del código", () => {
+    expect(composeSms(code, " Parcela P114: 7 de 30 hojas con roya. ")).toBe(
+      `${code}\nParcela P114: 7 de 30 hojas con roya.`,
+    );
+  });
+
+  it("sin frase válida sale solo el código", () => {
+    expect(composeSms(code, null)).toBe(code);
+    expect(composeSms(code, "")).toBe(code);
+    expect(composeSms(code, "x".repeat(SMS_MAX_LENGTH))).toBe(code);
+    expect(composeSms(code, "Plantas de más de 15 años.")).toBe(code);
+    expect(composeSms(code, "dos\nlineas")).toBe(code);
+    expect(composeSms(code, "Ver LP P999 30H")).toBe(code);
   });
 });

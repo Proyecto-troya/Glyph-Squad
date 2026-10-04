@@ -24,6 +24,14 @@ APP_MODELS = ML_DIR.parent / "app" / "public" / "models"
 MANIFEST_FIELDS = ["ruta", "fuente", "pais", "etiqueta", "particion"]
 
 
+def app_model():
+    """El .onnx que carga la app: leaf-int8.onnx, o leaf-fp32.onnx si se exportó sin cuantizar."""
+    models = sorted(APP_MODELS.glob("*.onnx"))
+    if len(models) != 1:
+        raise SystemExit(f"Se esperaba un solo .onnx en {APP_MODELS}; hay {len(models)}. Ejecutar export_onnx.py.")
+    return models[0]
+
+
 def read_manifest(path=MANIFEST, **filters):
     """Filas del manifiesto que cumplen los filtros, p. ej. particion="val", fuente="bracol"."""
     with open(path, newline="", encoding="utf-8") as f:
@@ -33,6 +41,18 @@ def read_manifest(path=MANIFEST, **filters):
 
 def open_rgb(path):
     return ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+
+
+def readable(rows):
+    """Quita del listado las fotos que no se pueden abrir (descargas dañadas) y avisa de cuántas son."""
+    good = []
+    for row in rows:
+        try:
+            open_rgb(DATA_DIR / row["ruta"])
+            good.append(row)
+        except OSError:
+            print(f"foto dañada, se salta: {row['ruta']}")
+    return good
 
 
 def center_square(image):

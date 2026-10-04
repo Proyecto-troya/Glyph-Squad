@@ -2,7 +2,7 @@
 //   LP <parcela> <total>H [ROYA<n>] [MIN<n>] [CER<n>] [PHO<n>] [DUDA<n>] [E15+]
 // Las clases en 0 se omiten; E15+ solo si respondió que sí.
 
-import { Counts, emptyCounts, normalizePlot } from "./sample";
+import { Counts, emptyCounts, normalizePlot, tooManyUnsure } from "./sample";
 
 export interface SmsPayload {
   plot: string;
@@ -61,10 +61,42 @@ export function decodeSms(text: string): SmsPayload | null {
   return { plot, counts, over15 };
 }
 
+/** Lo que recibe el servicio LLM (POST /api/sms): solo lo que ya va en el código. */
+export interface SmsRequest {
+  plot: string;
+  counts: Counts;
+  over15: boolean;
+  flagUnsure: boolean;
+  code: string;
+}
+
+export function buildSmsRequest(plot: string, counts: Counts, over15: boolean | null): SmsRequest {
+  return {
+    plot,
+    counts,
+    over15: over15 === true,
+    flagUnsure: tooManyUnsure(counts),
+    code: encodeSms(plot, counts, over15),
+  };
+}
+
+/**
+ * SMS final: el código y, debajo, la frase redactada por el LLM.
+ * El contenido de la frase lo valida el servidor; aquí solo se comprueba que
+ * no rompa el SMS. Si no vale (o no hay frase), sale solo el código.
+ */
+export function composeSms(code: string, sentence: string | null | undefined): string {
+  const text = sentence?.trim() ?? "";
+  const fits = code.length + 1 + text.length <= SMS_MAX_LENGTH;
+  const plain = /^[\x20-\x7E]+$/.test(text) && !text.toUpperCase().includes("LP ");
+  return fits && plain ? `${code}\n${text}` : code;
+}
+
 /** Separa un texto pegado (un código por línea) en códigos válidos y líneas que no se entienden. */
 export function parseCodes(text: string): { payloads: SmsPayload[]; invalid: string[] } {
   const payloads: SmsPayload[] = [];
   const invalid: string[] = [];
+  let afterCode = false;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
@@ -72,7 +104,9 @@ export function parseCodes(text: string): { payloads: SmsPayload[]; invalid: str
     const start = line.toUpperCase().indexOf("LP ");
     const payload = start >= 0 ? decodeSms(line.slice(start)) : null;
     if (payload) payloads.push(payload);
-    else invalid.push(line);
+    // La línea que sigue a un código es la frase del SMS: no se usa para ordenar.
+    else if (!afterCode) invalid.push(line);
+    afterCode = payload !== null;
   }
   return { payloads, invalid };
 }

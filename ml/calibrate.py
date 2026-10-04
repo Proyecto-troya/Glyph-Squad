@@ -7,10 +7,11 @@ Se calibra el archivo que va al teléfono (int8). Escribe app/public/models/cali
 """
 import argparse
 import json
+from pathlib import Path
 
 import numpy as np
 
-from common import APP_MODELS, DATA_DIR, INPUT_SIZE, LABELS, MEAN, STD, predict_logits, read_manifest, softmax
+from common import APP_MODELS, DATA_DIR, INPUT_SIZE, LABELS, MEAN, STD, app_model, predict_logits, read_manifest, softmax
 
 
 def fit_temperature(logits, y):
@@ -36,7 +37,7 @@ def fit_threshold(probs, y, target):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default=str(APP_MODELS / "leaf-int8.onnx"))
+    parser.add_argument("--model", default=str(app_model()))
     parser.add_argument("--target-precision", type=float, default=0.90)
     args = parser.parse_args()
 
@@ -48,6 +49,7 @@ def main():
     threshold, precision, coverage = fit_threshold(softmax(logits, temperature), y, args.target_precision)
 
     calibration = {
+        "model": Path(args.model).name,
         "labels": LABELS,
         "temperature": round(temperature, 4),
         "threshold": round(threshold, 4),

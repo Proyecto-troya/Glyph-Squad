@@ -18,7 +18,7 @@ npm run build     # dist/ con service worker (modo sin conexión)
 npm run size      # MB de dist/ contra la meta de 20 MB
 ```
 
-Sin `app/public/models/leaf-int8.onnx` y `calibration.json` la app usa un **clasificador de
+Sin `app/public/models/calibration.json` y su modelo `.onnx` la app usa un **clasificador de
 mentira** y lo avisa con una franja roja ("MODO DEMOSTRACIÓN"). Sirve para ensayar el
 recorrido, no para medir nada.
 
@@ -42,10 +42,26 @@ Los datasets se descargan a `ml/data/` (no se suben al repo). Ver [DATOS.md](DAT
 
 ## Estado
 
-Hecho y probado: lógica de dominio (27 pruebas), build y service worker, 4 pantallas con
-el clasificador de mentira. La app sin modelo ni audio pesa 13,7 MB (casi todo es el WASM
-de onnxruntime-web).
+Hecho y probado: lógica de dominio (31 pruebas), build y service worker, 4 pantallas.
+La app con modelo y sin audio pesa 19,5 MB (13,7 MB son el WASM de onnxruntime-web).
 
-Escrito pero sin ejecutar todavía (faltan datos, GPU o teléfono): entrenamiento, export,
-calibración, evaluación, clips de audio, integración ONNX en un navegador real, prueba en
-Android con datos apagados y SMS recibido. La tabla de medidas de PLAN.md §5 sigue vacía.
+Modelo entrenado en CPU con 1.401 de las 1.747 hojas de BRACOL (el zip publicado en
+Mendeley está cortado). La cuantización int8 lo hunde (13–27 % en validación), así que la
+app lleva el modelo sin cuantizar, `leaf-fp32.onnx` (5,8 MB). Medidas de ese archivo
+(`python ml/evaluate.py`):
+
+| Medida | Dónde | Resultado |
+|---|---|---|
+| Precisión 5 clases | BRACOL test, 202 hojas | 88,1 % |
+| Precisión país no visto (E1) | Saposoa sana/roya, 999 fotos | 46,7 % (aceptadas: 60,7 %, cobertura 67,1 %) |
+| Abstención ante clase desconocida | Saposoa ojo de gallo, 500 fotos | 7,4 % |
+| Cobertura con 90 % de precisión | Validación calibrada, 201 hojas | 89,5 % |
+
+El modelo acierta en Brasil y falla en Perú, y casi nunca se abstiene ante ojo de gallo:
+tal como está no sirve para la decisión de Noor.
+
+La frase del LLM en el SMS está preparada pero apagada (`SMS_SERVICE_ENABLED` en
+`app/src/adapters/smsService.ts`): el SMS lleva solo el código.
+
+Sin hacer todavía: clips de audio, modelo ONNX probado en un navegador real, prueba en
+Android con datos apagados, SMS recibido, conjunto dorado con fotos propias.

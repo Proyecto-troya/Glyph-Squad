@@ -1,6 +1,7 @@
 import { rankPlots } from "../domain/ranking";
 import { parseCodes } from "../domain/sms";
 import { el } from "./dom";
+import { icon } from "./icons";
 
 const EXAMPLES = [
   "LP P114 30H ROYA7 CER1 DUDA2 E15+",
@@ -11,7 +12,9 @@ const EXAMPLES = [
 
 export function renderTecnico(root: HTMLElement): void {
   const text = el("textarea", { rows: 6, placeholder: "Pega aquí los códigos recibidos, uno por línea" });
-  const file = el("input", { type: "file", accept: ".txt,.csv,text/plain" });
+  const file = el("input", { type: "file", accept: ".txt,.csv,text/plain", hidden: true });
+  const upload = el("button", { type: "button" }, icon("upload"), "Subir archivo");
+  upload.onclick = () => file.click();
   const output = el("div", {});
 
   const refresh = () => {
@@ -39,19 +42,23 @@ export function renderTecnico(root: HTMLElement): void {
             "tr",
             {},
             el("td", {}, row.plot),
-            el("td", {}, `${Math.round(row.sickPct)} %`),
+            el("td", {}, el("span", { class: "pill" }, `${Math.round(row.sickPct)} %`)),
             el("td", {}, String(c.total)),
             el("td", {}, detail.join(", ") || "sin enfermas"),
-            el("td", {}, flags.join(" · ")),
+            el("td", {}, ...flags.map((flag) => el("span", { class: "chip" }, flag as string))),
           ),
         );
       }
-      output.append(el("div", { class: "scroll" }, table));
+      output.append(el("div", { class: "card scroll" }, table));
     }
     if (invalid.length > 0) {
       output.append(
-        el("p", { class: "error" }, "Líneas que no se entienden:"),
-        el("ul", {}, ...invalid.map((line) => el("li", {}, line))),
+        el(
+          "div",
+          { class: "card warn" },
+          el("p", { class: "error" }, "Líneas que no se entienden:"),
+          el("ul", { class: "invalid" }, ...invalid.map((line) => el("li", {}, line))),
+        ),
       );
     }
   };
@@ -63,7 +70,7 @@ export function renderTecnico(root: HTMLElement): void {
     text.value = [text.value.trim(), await chosen.text()].filter(Boolean).join("\n");
     refresh();
   };
-  const examples = el("button", { type: "button" }, "Cargar ejemplos");
+  const examples = el("button", { type: "button" }, icon("list"), "Cargar ejemplos");
   examples.onclick = () => {
     text.value = EXAMPLES;
     refresh();
@@ -73,7 +80,7 @@ export function renderTecnico(root: HTMLElement): void {
     el("h1", {}, "Lista del técnico"),
     el("p", { class: "hint" }, "Ordena las parcelas por % de hojas con señales. Son 30 hojas por parcela: a quién visitar lo decide el técnico."),
     text,
-    el("div", { class: "row" }, file, examples),
+    el("div", { class: "row" }, upload, examples, file),
     output,
   );
 }
