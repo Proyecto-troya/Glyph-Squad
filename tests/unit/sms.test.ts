@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Counts, emptyCounts } from "../../app/src/domain/sample";
 import {
   buildSmsRequest,
+  codeParts,
   composeSms,
   decodeSms,
   encodeSms,
@@ -55,6 +56,17 @@ describe("código SMS", () => {
     ]) {
       expect(decodeSms(bad), bad).toBeNull();
     }
+  });
+
+  it("explica cada pieza del código", () => {
+    expect(codeParts("LP P114 28H ROYA7 DUDA2 E15+")).toEqual([
+      { text: "LP", kind: "app" },
+      { text: "P114", kind: "plot" },
+      { text: "28H", kind: "total" },
+      { text: "ROYA7", kind: "count", label: "roya", n: 7 },
+      { text: "DUDA2", kind: "count", label: "duda", n: 2 },
+      { text: "E15+", kind: "over15" },
+    ]);
   });
 
   it("separa lo pegado en códigos y líneas que no se entienden", () => {

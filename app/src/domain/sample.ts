@@ -30,6 +30,8 @@ export interface Counts {
 
 /** Simplificación del muestreo SENASA: 10 plantas × 3 ramas. */
 export const TARGET_LEAVES = 30;
+/** Hojas por planta: rama baja, media y alta. */
+export const LEAVES_PER_PLANT = 3;
 /** Por encima de esta fracción de dudas se avisa al técnico (M06 / flagUnsure). */
 export const UNSURE_LIMIT = 0.2;
 
@@ -103,4 +105,20 @@ export function decideLabel(
   for (let i = 1; i < probs.length; i++) if (probs[i] > probs[best]) best = i;
   const confidence = probs[best] ?? 0;
   return { label: confidence >= threshold ? labels[best] : "duda", confidence };
+}
+
+export interface ClassProb {
+  label: LeafLabel;
+  p: number;
+}
+
+/** Las clases más probables, de mayor a menor: lo que el modelo consideró además de su respuesta. */
+export function topClasses(
+  probs: ArrayLike<number>,
+  labels: readonly LeafLabel[] = LEAF_LABELS,
+  n = 3,
+): ClassProb[] {
+  return Array.from(probs, (p, i) => ({ label: labels[i], p }))
+    .sort((a, b) => b.p - a.p)
+    .slice(0, n);
 }

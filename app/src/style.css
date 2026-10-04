@@ -5,169 +5,885 @@
 @font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); }
 
+/*
+  Leaf Plate · hoja de estilos de la app. Es la propuesta de UI-UX-Modules, versión 3
+  (UI-UX-Modules/prototipo/style.css; las decisiones están en UI-UX-Modules/DISENO.md), más lo
+  que la app tiene y el prototipo no: las tipografías de arriba, el botón de idioma y los
+  estados del envío. El markup de la sección "Componentes nuevos" está descrito en
+  UI-UX-Modules/COMPONENTES.md.
+
+  Escena: un patio en Santa Teresa, un sábado de día, el smartphone de la hija con el
+  brillo bajo y el sol encima. Por eso: tema claro en el contenido, texto grande,
+  contraste alto y zonas táctiles de 56–68 px.
+
+  Estructura: la barra superior y el título de cada pantalla forman una sola franja verde
+  oscura; la primera tarjeta se monta sobre ella. La barra de pestañas cierra abajo con el
+  mismo verde.
+
+  Reglas de forma: todo lo que se toca es una píldora; tarjetas 20 px; cajas internas 12 px.
+  Los dos globos de SMS (mensaje fijo recibido, código enviado) llevan una esquina en punta.
+  Línea discontinua = "lo tiene que mirar una persona" (duda, aviso, quechua sin validar).
+*/
+
 :root {
+  /* Verde de la cooperativa */
+  --forest: #133f27;
+  --forest-2: #1d5034;
+  --on-forest: #ffffff;
+  --on-forest-muted: #b9d4c2;
   --green: #1f6b3a;
-  --green-dark: #17522c;
-  --green-soft: #e0efe4;
-  --ink: #18201b;
-  --muted: #56615a;
-  --paper: #f3f5f1;
+  --green-dark: #133f27;
+  --green-soft: #e0f0e4;
+  --mint: #d4ecd9;
+
+  /* Texto y superficies */
+  --ink: #141a16;
+  --muted: #48534b;
+  --placeholder: #6f7b72;
+  --paper: #f2f5f0;
+  --paper-press: #e3e9e1;
   --surface: #ffffff;
-  --line: #d3d9d2;
-  --line-strong: #8d998f;
-  --warn: #fdf1d0;
-  --warn-line: #8a5a00;
-  --warn-ink: #8a5a00;
-  --danger: #a12020;
-  --radius: 10px;
+  --line: #dbe2d9;
+  --line-strong: #76837a;
+  --track: #d3dbd1;
+  --disabled-bg: #e3e8e1;
+  --disabled-fg: #56615a;
+
+  /* Duda y aviso */
+  --warn: #fff2cc;
+  --warn-line: #a87a00;
+  --warn-ink: #5e4300;
+  --danger: #a3201c;
+
+  /* Clases de hoja (también se leen por su nombre y su número, nunca solo por el color) */
+  --tone-sana: #2e8b57;
+  --tone-roya: #c25a14;
+  --tone-minador: #8a5a2b;
+  --tone-cercospora: #7a4fa3;
+  --tone-phoma: #2f6f9f;
+  --tone-duda: #a37800;
+
+  --radius: 20px;
+  --radius-inner: 12px;
+  --pill: 999px;
+  --shadow: 0 1px 2px rgb(19 63 39 / 0.08), 0 8px 20px rgb(19 63 39 / 0.08);
+  --nav-height: 72px;
+  --overlap: 40px;
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
   font-family: var(--sans);
   font-size: 18px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--ink);
-  background: #e4e8e2;
+  background: #d9e1d6;
+  caret-color: var(--green);
+  accent-color: var(--green);
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-* { box-sizing: border-box; }
+*,
+*::before,
+*::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; -webkit-tap-highlight-color: transparent; }
-#app { max-width: 640px; min-height: 100vh; min-height: 100dvh; margin: 0 auto; background: var(--paper); }
-main { padding: 4px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+::selection { background: var(--mint); color: var(--forest); }
 
-h1 { font-size: 1.5rem; line-height: 1.2; letter-spacing: -0.015em; margin: 20px 0 8px; }
-h2 { font-size: 1.1rem; line-height: 1.25; margin: 0 0 6px; }
-p { margin: 8px 0; }
-
-.icon { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-/* Barra superior */
-.appbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; background: var(--green); color: #fff; }
-.brand { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 600; }
-.brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #fff; color: var(--green); }
-/* Botón de idioma (ES / QU / EN) a la derecha de la barra; el idioma actual queda en blanco. */
-.lang-switch { display: flex; gap: 4px; margin-left: auto; }
-.lang-switch button { min-width: 44px; min-height: 40px; padding: 4px 8px; border-color: rgba(255, 255, 255, 0.65); background: transparent; color: #fff; font-family: var(--mono); font-size: 0.8rem; }
-.lang-switch button:active { background: var(--green-dark); }
-.lang-switch button[aria-pressed="true"] { background: #fff; border-color: #fff; color: var(--green-dark); }
-.lang-switch button:focus-visible { outline-color: #fff; }
-.banner { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 16px; background: var(--warn); color: var(--warn-ink); border-bottom: 1px dashed var(--warn-line); font-size: 0.75rem; font-weight: 600; line-height: 1.3; }
-
-/* Botones y campos */
-button, .button, input, textarea {
-  font: inherit;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  background: var(--surface);
-  color: var(--ink);
+#app {
+  max-width: 640px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--paper);
 }
-button, .button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; cursor: pointer; text-align: center; text-decoration: none; font-weight: 600; transition: background-color 0.15s, border-color 0.15s; }
-button:active, .button:active { background: var(--paper); }
-button:disabled { opacity: 0.45; cursor: default; }
-:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
-.primary { background: var(--green); border-color: var(--green); color: #fff; }
-.primary:active { background: var(--green-dark); border-color: var(--green-dark); }
-.big { width: 100%; min-height: 64px; padding: 16px; font-size: 1.15rem; margin: 16px 0; }
-.chosen { border-color: var(--green); background: var(--green-soft); color: var(--green-dark); }
 
-input[type="text"], input[type="tel"], input[type="url"], textarea { width: 100%; display: block; margin-top: 6px; }
-input:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
-::placeholder { color: #8d998f; }
-textarea { resize: vertical; }
-label { display: block; margin: 14px 0; font-size: 0.9rem; font-weight: 600; }
-label input { font-size: 1rem; font-weight: 400; }
+main { padding: 0 16px calc(var(--nav-height) + 40px + env(safe-area-inset-bottom, 0px)); }
+
+h1 { font-size: 2.1rem; line-height: 1.08; font-weight: 700; letter-spacing: -0.025em; margin: 24px 0 12px; text-wrap: balance; }
+h2 { font-size: 1.2rem; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 8px; }
+p { margin: 8px 0; }
+strong { font-weight: 700; }
+
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+
+/* ---------- Franja verde: barra superior + título de la pantalla ---------- */
+
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px;
+  background: var(--forest);
+  color: var(--on-forest);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; color: var(--on-forest-muted); }
+/* La marca es un plato visto desde arriba: el borde y la hoja encima. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--green);
+  box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 5.5px rgb(31 107 58 / 0.3);
+}
+.brand-mark .icon { width: 17px; height: 17px; }
+
+/* Botón de idioma (ES / QU / EN): fila propia bajo la barra, dentro de la franja verde, para que la
+   marca y el indicador de IA quepan en la barra a 360 px. No se queda fija al desplazar; el idioma
+   actual queda en claro. */
+.lang-row { display: flex; justify-content: flex-end; padding: 0 16px 6px; background: var(--forest); }
+.lang-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(212 236 217 / 0.28);
+  border-radius: var(--pill);
+}
+.lang-switch button {
+  min-width: 46px;
+  min-height: 40px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--on-forest-muted);
+  background: transparent;
+  border: 0;
+}
+.lang-switch button:active { background: rgb(255 255 255 / 0.12); transform: none; }
+.lang-switch button[aria-pressed="true"] { color: var(--forest); background: var(--mint); }
+.lang-switch button:focus-visible { outline-color: var(--mint); outline-offset: 1px; }
+
+/* Título de pantalla (Parcela P114, Mensaje para el técnico, Lista del técnico): parte de la franja. */
+main > h1:first-child {
+  margin: 0 -16px;
+  padding: 4px 16px calc(var(--overlap) + 20px);
+  color: var(--on-forest);
+  /* Una luz suave abajo a la derecha da profundidad sin cortar la unión con la barra. */
+  background: radial-gradient(90% 130% at 100% 100%, rgb(212 236 217 / 0.1), transparent 60%), var(--forest);
+}
+/* La primera pieza bajo el título se monta sobre la franja. */
+main > h1:first-child + .card,
+main > h1:first-child + .message {
+  position: relative;
+  margin-top: calc(-1 * var(--overlap));
+}
+/* Técnico: la explicación queda dentro de la franja y el campo se monta encima. */
+main > h1:first-child:has(+ .hint) { padding-bottom: 6px; background: var(--forest); }
+main > h1:first-child + .hint {
+  margin: 0 -16px;
+  padding: 0 16px calc(var(--overlap) + 20px);
+  color: var(--on-forest-muted);
+  background: radial-gradient(90% 130% at 100% 100%, rgb(212 236 217 / 0.1), transparent 60%), var(--forest);
+  font-size: 0.92rem;
+}
+main > h1:first-child + .hint + textarea { position: relative; margin-top: calc(-1 * var(--overlap)); box-shadow: var(--shadow); }
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 16px;
+  background: var(--warn);
+  color: var(--warn-ink);
+  border-bottom: 2px dashed var(--warn-line);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+/* Con la franja de demostración, el título no se pega a su borde. */
+.banner + main > h1:first-child { padding-top: 18px; }
+.banner + main > form > .intro { padding-top: 26px; }
+
+/* ---------- Botones: píldoras ---------- */
+
+button,
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px 22px;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--pill);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease), color 0.15s var(--ease), transform 0.1s var(--ease);
+}
+button:active,
+.button:active { background: var(--paper-press); transform: scale(0.98); }
+
+button:disabled {
+  color: var(--disabled-fg);
+  background: var(--disabled-bg);
+  border-color: var(--disabled-bg);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.primary {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 2px 4px rgb(19 63 39 / 0.18), 0 8px 18px rgb(31 107 58 / 0.22);
+}
+.primary:active { background: var(--forest); border-color: var(--forest); box-shadow: none; }
+.primary:disabled { box-shadow: none; }
+
+.big {
+  width: 100%;
+  min-height: 68px;
+  margin: 20px 0;
+  padding: 16px 24px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.big .icon { width: 1.35em; height: 1.35em; }
+
+/* Respuesta elegida en Sí / No: color, borde y una marca, para que no dependa solo del color. */
+.chosen { color: var(--forest); background: var(--mint); border-color: var(--green); }
+.chosen::before {
+  content: "";
+  width: 0.38em;
+  height: 0.72em;
+  margin: -0.2em 0.15em 0 0;
+  border: solid currentColor;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+/* ---------- Campos ---------- */
+
+label { display: block; margin: 16px 0; font-size: 0.95rem; font-weight: 600; }
+label input { margin-top: 8px; }
+
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 18px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-inner);
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+/* El código de parcela es un código: mayúsculas y letra de ancho fijo, grande. */
+input[type="text"] { font-family: var(--mono); font-size: 1.3rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+input:focus,
+textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px var(--mint); }
+::placeholder { color: var(--placeholder); opacity: 1; font-weight: 400; letter-spacing: normal; }
+input[type="text"]::placeholder { letter-spacing: 0.08em; }
+textarea { resize: vertical; min-height: 9.5em; max-height: 60vh; field-sizing: content; line-height: 1.5; font-family: var(--mono); font-size: 0.95rem; font-weight: 600; }
+textarea::placeholder { font-family: var(--sans); font-size: 1rem; }
+/* Campo con error: borde rojo además del texto (navegadores con :has). */
+label:has(+ .error:not(:empty)) input { border-color: var(--danger); }
+
+/* ---------- Filas y textos de apoyo ---------- */
 
 .row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
 .row > * { flex: 1 1 140px; }
-.row > button, .row > .button { padding: 12px 8px; font-size: 0.92rem; white-space: nowrap; }
+.row > button,
+.row > .button { padding: 12px 14px; font-size: 0.95rem; white-space: nowrap; }
 
-.hint, .quz-label, .status { color: var(--muted); font-size: 0.85rem; }
+.hint,
+.quz-label { color: var(--muted); font-size: 0.88rem; }
+
+.status { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--green); font-size: 1rem; font-weight: 600; }
+.status::before {
+  content: "";
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: status-pulse 0.9s var(--ease) infinite alternate;
+}
 .status:empty { display: none; }
-.error { color: var(--danger); font-size: 0.9rem; font-weight: 600; }
+/* Enviar usa .status para el resultado del envío: el punto solo late mientras se envía. */
+.status[data-state="done"]::before { animation: none; }
+.status[data-state="fail"] { color: var(--warn-ink); }
+.status[data-state="fail"]::before { content: none; }
+@keyframes status-pulse { from { opacity: 1; transform: scale(1); } to { opacity: 0.3; transform: scale(0.65); } }
+
+.error { color: var(--danger); font-size: 0.92rem; font-weight: 700; }
 .error:empty { display: none; }
 
-/* Tarjetas */
-.card, .message { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 12px 0; background: var(--surface); }
-.card .message { border: 0; padding: 0; margin: 0; background: none; }
+/* ---------- Tarjetas ---------- */
+
+.card {
+  margin: 16px 0;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 .card > :first-child { margin-top: 0; }
 .card > :last-child { margin-bottom: 0; }
-.warn { background: var(--warn); border: 1px dashed var(--warn-line); }
-/* .main es el mensaje en el idioma de la interfaz; .aside, el español que acompaña siempre al quechua. */
-.message .main { font-size: 1.1rem; font-weight: 600; margin-top: 0; overflow-wrap: anywhere; }
-.message .aside { font-style: italic; overflow-wrap: anywhere; }
-.message .row { margin-bottom: 0; }
-.listen { min-height: 44px; padding: 8px 12px; font-size: 0.9rem; color: var(--green-dark); }
 
-/* Pantalla Muestra */
-.intro { padding: 20px 0 4px; }
-.intro .hero { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 0 12px; border-radius: var(--radius); background: var(--green-soft); color: var(--green); font-size: 1.5rem; }
-.intro h1 { font-size: 1.8rem; margin: 0 0 4px; }
-.intro p { margin: 0; color: var(--muted); }
-.steps { list-style: none; counter-reset: step; margin: 16px 0 0; padding: 0; }
-.steps li { counter-increment: step; display: flex; align-items: center; gap: 12px; padding: 8px 0; font-size: 0.9rem; color: var(--muted); }
-.steps li::before { content: counter(step, decimal-leading-zero); flex: none; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: var(--green); }
+.warn {
+  background: var(--warn);
+  border: 2px dashed var(--warn-line);
+  box-shadow: none;
+}
 
-.counter { display: flex; align-items: baseline; gap: 6px; margin: 0; color: var(--muted); }
-.counter strong { font-size: 2.2rem; line-height: 1; color: var(--green); font-variant-numeric: tabular-nums; }
-.progress { height: 8px; margin: 12px 0; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); overflow: hidden; }
-.progress-fill { height: 100%; background: var(--green); transition: width 0.3s; }
-.done { display: flex; align-items: center; gap: 8px; color: var(--green-dark); font-weight: 600; }
+/* ---------- Mensaje fijo: un SMS recibido ---------- */
 
-.result-head { display: flex; align-items: center; gap: 10px; }
-.result-head h2 { margin: 0; }
-.dot { flex: none; width: 12px; height: 12px; border-radius: 3px; background: var(--tone, var(--muted)); }
-.tone-sana { --tone: #2e8b57; }
-.tone-roya { --tone: #c8601a; }
-.tone-minador { --tone: #8a5a2b; }
-.tone-cercospora { --tone: #7a4fa3; }
-.tone-phoma { --tone: #2f6f9f; }
-.tone-duda { --tone: #b08a1e; }
+/* Es lo que la app "dice": globo verde suave con la esquina de abajo a la izquierda en punta. */
+.message {
+  margin: 16px 0;
+  padding: 18px;
+  background: var(--green-soft);
+  border-radius: var(--radius) var(--radius) var(--radius) 6px;
+}
+/* .main es el mensaje en el idioma de la interfaz; .aside, el otro idioma de Noor al lado
+   (quechua bajo el español y español bajo el quechua). */
+.message .main { margin: 0; font-size: 1.2rem; font-weight: 600; line-height: 1.32; letter-spacing: -0.005em; overflow-wrap: anywhere; }
+.message .aside { margin: 10px 0 0; font-style: italic; line-height: 1.4; overflow-wrap: anywhere; hyphens: auto; }
+.message .quz-label { margin: 12px 0 0; padding-top: 10px; border-top: 1.5px dashed #a9cbb3; font-size: 0.8rem; }
+.message .row { margin: 14px 0 0; }
 
-/* Pantalla Resultado */
-.counts { padding: 6px 16px; }
-.count-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+/* Dentro de una tarjeta (foto rechazada) el mensaje pierde su globo. */
+.card .message { margin: 10px 0 0; padding: 0; background: none; border-radius: 0; }
+.card.warn .message .quz-label { border-top-color: var(--warn-line); }
+
+.listen {
+  min-height: 48px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  color: var(--forest);
+  background: var(--surface);
+  border-color: var(--green);
+}
+.listen:active { background: var(--mint); }
+.card.warn .listen { color: var(--warn-ink); border-color: var(--warn-line); }
+
+/* ---------- Muestra: formulario de parcela ---------- */
+
+/* La introducción también es franja verde; la tarjeta del código se monta encima. */
+.intro {
+  margin: 0 -16px;
+  padding: 18px 16px calc(var(--overlap) + 26px);
+  color: var(--on-forest);
+  background: radial-gradient(90% 130% at 100% 100%, rgb(212 236 217 / 0.1), transparent 60%), var(--forest);
+}
+.intro + .card { position: relative; margin-top: calc(-1 * var(--overlap)); }
+
+/* El plato blanco del protocolo, visto desde arriba. En el estado vacío queda sin hoja. */
+.hero {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin: 0 0 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--green);
+  font-size: 1.7rem;
+  box-shadow: inset 0 0 0 9px var(--surface), inset 0 0 0 11px var(--mint), 0 6px 18px rgb(0 0 0 / 0.25);
+}
+.intro h1 { margin: 0 0 8px; font-size: 2.4rem; }
+.intro p { margin: 0; color: var(--on-forest-muted); font-size: 1.05rem; }
+
+.steps { list-style: none; counter-reset: step; margin: 22px 0 0; padding: 0 4px; }
+.steps li {
+  position: relative;
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 6px 0 16px;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: var(--on-forest);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 42px;
+  bottom: 0;
+  width: 2px;
+  background: var(--track);
+}
+
+/* ---------- Muestra: tomando fotos ---------- */
+
+.counter { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--muted); font-size: 1.05rem; }
+.counter strong { font-size: 4rem; line-height: 0.95; color: var(--forest); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+
+/*
+  La barra de progreso es la muestra misma: 30 hojas agrupadas de 3 en 3,
+  10 plantas × 3 ramas. Cada hoja aceptada enciende un óvalo.
+  El ancho del relleno lo pone el script; una máscara de tres óvalos por planta corta
+  el relleno y el carril. Medidas en % de cada planta (Chrome no acepta calc con % y px
+  en el tamaño de un radial-gradient): borde 7,5 %, hoja 25,67 %, hueco 4 %. Con esas
+  medidas cada borde del relleno (1/3, 2/3, 3/3 de la planta) cae en un hueco y nunca
+  se ve media hoja encendida.
+*/
+.progress {
+  height: 22px;
+  margin: 18px 0 12px;
+  background: var(--track);
+  overflow: hidden;
+  -webkit-mask-image:
+    radial-gradient(12.8% 50% at 20.33% 50%, #000 90%, transparent),
+    radial-gradient(12.8% 50% at 50% 50%, #000 90%, transparent),
+    radial-gradient(12.8% 50% at 79.67% 50%, #000 90%, transparent);
+  mask-image:
+    radial-gradient(12.8% 50% at 20.33% 50%, #000 90%, transparent),
+    radial-gradient(12.8% 50% at 50% 50%, #000 90%, transparent),
+    radial-gradient(12.8% 50% at 79.67% 50%, #000 90%, transparent);
+  -webkit-mask-size: 10% 100%;
+  mask-size: 10% 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+}
+.progress-fill { height: 100%; background: var(--green); transition: width 0.3s var(--ease); }
+
+.done { display: flex; align-items: center; gap: 10px; color: var(--forest); font-weight: 700; }
+.done .icon { width: 1.5em; height: 1.5em; padding: 4px; border-radius: 50%; background: var(--green); color: #fff; stroke-width: 3; }
+
+/* Tarjeta de la última foto: cabecera llena con el color de la clase, nombre en blanco. */
+.result-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -18px -18px 14px;
+  padding: 16px 18px;
+  color: #fff;
+  background: var(--tone, var(--muted));
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+}
+.result-head h2 { margin: 0; font-size: 1.55rem; letter-spacing: -0.02em; }
+.result-head .dot { width: 22px; height: 22px; background: #fff; }
+.card.warn > .result-head { margin: -18px -18px 14px; border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0; }
+.result-head + p { font-size: 1.1rem; font-weight: 600; }
+.card.warn > h2 { font-size: 1.4rem; }
+
+/* El punto de cada clase es una hoja pequeña. */
+.dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px 100%;
+  background: var(--tone, var(--muted));
+}
+.tone-sana { --tone: var(--tone-sana); }
+.tone-roya { --tone: var(--tone-roya); }
+.tone-minador { --tone: var(--tone-minador); }
+.tone-cercospora { --tone: var(--tone-cercospora); }
+.tone-phoma { --tone: var(--tone-phoma); }
+.tone-duda { --tone: var(--tone-duda); }
+
+/* ---------- Resultado ---------- */
+
+.counts { padding: 6px 18px; }
+.count-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
 .count-row:last-child { border-bottom: 0; }
-.count-name { flex: 0 0 8em; white-space: nowrap; }
-.count-row strong { flex: 0 0 2em; text-align: right; font-variant-numeric: tabular-nums; }
-.bar { flex: 1; height: 8px; border-radius: 999px; background: var(--paper); overflow: hidden; }
+.count-name { flex: 0 0 7.6em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.count-row strong { flex: 0 0 2em; text-align: right; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.bar { flex: 1; height: 12px; border-radius: var(--pill); background: var(--paper); overflow: hidden; }
 .bar-fill { height: 100%; border-radius: inherit; background: var(--tone); }
-.count-row.total { font-weight: 700; }
-.count-row.total .count-name { flex: 1; }
+.count-row.total { margin-top: 2px; border-top: 2px solid var(--ink); }
+.count-row.total .count-name { flex: 1; font-weight: 700; }
+.count-row.total strong { font-size: 1.6rem; }
 
-/* Estado vacío */
-.empty { text-align: center; padding: 48px 8px 0; color: var(--muted); }
-.empty .hero { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius); font-size: 1.5rem; }
-.empty h1 { color: var(--ink); margin: 0 0 4px; }
-.empty button { margin: 20px auto 0; padding: 12px 24px; }
+/* Pregunta de edad: Sí / No grandes. */
+.card > h2 + .row > button { min-height: 62px; font-size: 1.2rem; }
 
-/* Pantalla Enviar */
-.code { font-family: var(--mono); font-size: 1.3rem; font-weight: 600; line-height: 1.35; padding: 14px; margin: 0 0 8px; border: 1px dashed var(--green); border-radius: 6px; background: var(--green-soft); color: var(--green-dark); overflow-wrap: anywhere; user-select: all; }
-.sentence { font-size: 1.05rem; margin: 8px 0 0; overflow-wrap: anywhere; }
+/* ---------- Estado vacío ---------- */
+
+.empty { padding: 64px 8px 0; text-align: center; color: var(--muted); }
+.empty .hero {
+  margin: 0 auto 20px;
+  color: var(--line-strong);
+  background: transparent;
+  border: 2px dashed var(--line-strong);
+  box-shadow: none;
+}
+.empty h1 { margin: 0 0 8px; color: var(--ink); }
+.empty p { margin: 0 auto; max-width: 26ch; }
+.empty button { margin: 28px auto 0; padding: 14px 30px; }
+
+/* ---------- Enviar ---------- */
+
+/* El código es el SMS que ella va a enviar: globo verde con la esquina de abajo a la derecha en punta. */
+.code {
+  width: fit-content;
+  max-width: 94%;
+  margin: 4px 0 12px auto;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--green);
+  border-radius: var(--radius) var(--radius) 6px var(--radius);
+  overflow-wrap: anywhere;
+  -webkit-user-select: all;
+  user-select: all;
+}
+.code::selection { background: var(--mint); color: var(--forest); }
+.sentence { margin: 8px 0 0; font-size: 1.05rem; overflow-wrap: anywhere; }
 .sentence:empty { display: none; }
-details { margin: 16px 0; border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 16px; background: var(--surface); }
-summary { color: var(--muted); font-size: 0.85rem; font-weight: 600; padding: 10px 0; cursor: pointer; }
-details[open] { padding-bottom: 16px; }
 
-/* Pantalla Técnico */
-.scroll { overflow-x: auto; padding: 0; }
-table { border-collapse: collapse; width: 100%; }
-th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); }
-th { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--paper); }
+a.button { width: 100%; }
+
+details {
+  margin: 20px 0;
+  padding: 0 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+summary { display: flex; align-items: center; min-height: 54px; color: var(--muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+details[open] { padding-bottom: 18px; }
+details > button { width: 100%; }
+
+/* ---------- Técnico ---------- */
+
+/* Sombra en el borde derecho mientras queden columnas por ver (desaparece al llegar al final). */
+.scroll {
+  padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background:
+    linear-gradient(to left, var(--surface) 40%, rgb(255 255 255 / 0)) right center / 48px 100% no-repeat local,
+    radial-gradient(farthest-side at 100% 50%, rgb(19 63 39 / 0.22), transparent) right center / 16px 100% no-repeat scroll,
+    var(--surface);
+}
+table { width: 100%; border-collapse: collapse; }
+th,
+td { padding: 13px 14px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); }
+th { font-size: 0.8rem; font-weight: 600; color: var(--on-forest-muted); background: var(--forest); white-space: nowrap; }
 tr:last-child td { border-bottom: 0; }
-.ranking { font-size: 0.85rem; white-space: nowrap; }
-.ranking td:first-child { font-weight: 700; }
-.pill { display: inline-block; min-width: 3.6em; padding: 2px 8px; border-radius: 6px; background: var(--green-soft); color: var(--green-dark); font-family: var(--mono); font-weight: 600; text-align: center; }
-.chip { display: inline-block; padding: 2px 8px; margin-right: 4px; border-radius: 6px; background: var(--warn); border: 1px dashed var(--warn-line); color: var(--warn-ink); font-size: 0.8rem; font-weight: 600; }
-.invalid { margin: 4px 0 0; padding-left: 20px; font-family: var(--mono); font-size: 0.85rem; }
+.ranking { font-size: 0.92rem; white-space: nowrap; }
+/* La columna de parcela queda fija al deslizar la tabla hacia el lado. */
+.ranking tr > :first-child { position: sticky; left: 0; z-index: 1; }
+.ranking td:first-child { font-family: var(--mono); font-weight: 600; background: var(--surface); box-shadow: inset -1px 0 0 var(--line); }
+.ranking th:first-child { color: var(--on-forest); }
+.pill {
+  display: inline-block;
+  min-width: 4em;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-weight: 600;
+  text-align: center;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--pill);
+}
+.chip {
+  display: inline-block;
+  margin: 2px 6px 2px 0;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--warn-ink);
+  background: var(--warn);
+  border: 1.5px dashed var(--warn-line);
+  border-radius: var(--pill);
+  white-space: nowrap;
+}
+.invalid { margin: 6px 0 0; padding-left: 20px; font-family: var(--mono); font-size: 0.88rem; font-weight: 600; overflow-wrap: anywhere; }
 
-/* Barra de pestañas */
-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2; width: min(100%, 640px); display: flex; background: var(--surface); border-top: 1.5px solid var(--line-strong); padding-bottom: env(safe-area-inset-bottom, 0px); }
-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; color: var(--muted); text-decoration: none; font-size: 0.7rem; font-weight: 600; }
-nav a .icon { width: 24px; height: 24px; }
-nav a.active { color: var(--green); font-weight: 700; background: var(--green-soft); }
+/* ---------- Barra de pestañas: verde oscuro, pestaña activa con su píldora ---------- */
+
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  width: min(100%, 640px);
+  padding: 0 6px env(safe-area-inset-bottom, 0px);
+  background: var(--forest);
+  transform: translateX(-50%);
+}
+nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: var(--nav-height);
+  padding: 8px 2px;
+  color: var(--on-forest-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+nav a .icon {
+  width: 60px;
+  height: 32px;
+  padding: 4px 18px;
+  border-radius: var(--pill);
+  transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+nav a:active .icon { background: var(--forest-2); }
+nav a.active { color: var(--on-forest); font-weight: 700; }
+nav a.active .icon { color: var(--forest); background: var(--mint); }
+
+/* =====================================================================
+   Componentes nuevos (dirección "instrumento + visor", ver COMPONENTES.md).
+   Su markup sale de app/src/ui/: scan.ts (visor), dom.ts (mapa), Enviar.ts y Tecnico.ts.
+   ===================================================================== */
+
+/* ---------- Indicador de IA local en la barra superior ---------- */
+
+.ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 5px 12px 5px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--mint);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(212 236 217 / 0.28);
+  border-radius: var(--pill);
+  white-space: nowrap;
+}
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: #7fe0a0; box-shadow: 0 0 0 3px rgb(127 224 160 / 0.22); }
+
+/* ---------- Mapa de la muestra: 10 plantas × 3 hojas, cada hoja con su clase ---------- */
+
+.sample-map {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+  margin: 16px 0 10px;
+}
+.plant {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  height: 36px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--line);
+}
+/* Rama baja, media y alta: cada hoja un poco más arriba. */
+.leaf { flex: 0 1 8px; height: 20px; border-radius: 50%; background: var(--track); }
+.leaf:nth-child(2) { margin-bottom: 4px; }
+.leaf:nth-child(3) { margin-bottom: 8px; }
+.leaf[class*="tone-"] { background: var(--tone); }
+.leaf.next { background: transparent; box-shadow: inset 0 0 0 2px var(--green); animation: status-pulse 0.9s var(--ease) infinite alternate; }
+
+.counts .sample-map { margin: 14px 0 6px; }
+.summary { margin: 0 0 6px; color: var(--muted); font-size: 0.95rem; }
+.summary strong { color: var(--ink); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- Visor de análisis: el "momento IA" ---------- */
+
+.scan {
+  margin: 16px 0;
+  padding: 16px;
+  color: var(--on-forest);
+  background: radial-gradient(120% 90% at 100% 0%, rgb(212 236 217 / 0.12), transparent 55%), #0e2f1d;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 4px rgb(19 63 39 / 0.2), 0 14px 30px rgb(19 63 39 / 0.22);
+}
+.scan-top { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: start; }
+
+.scan-frame {
+  --corner: var(--mint);
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #000;
+  border-radius: 14px;
+}
+.scan-frame[class*="tone-"] { --corner: color-mix(in srgb, var(--tone) 75%, #fff); }
+.scan-photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+.scan[data-state="working"] .scan-photo { filter: saturate(0.7) brightness(0.85); }
+/* Cuatro esquinas de visor. */
+.scan-frame::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--corner) 0 0) left top / 16px 3px,
+    linear-gradient(var(--corner) 0 0) left top / 3px 16px,
+    linear-gradient(var(--corner) 0 0) right top / 16px 3px,
+    linear-gradient(var(--corner) 0 0) right top / 3px 16px,
+    linear-gradient(var(--corner) 0 0) left bottom / 16px 3px,
+    linear-gradient(var(--corner) 0 0) left bottom / 3px 16px,
+    linear-gradient(var(--corner) 0 0) right bottom / 16px 3px,
+    linear-gradient(var(--corner) 0 0) right bottom / 3px 16px;
+  background-repeat: no-repeat;
+}
+/* Línea de escaneo: solo mientras analiza. */
+.scan-line {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0 46%, rgb(212 236 217 / 0.45) 49.5%, var(--mint) 50%, transparent 52%) 0 0 / 100% 220% no-repeat;
+  animation: scan-sweep 1.5s var(--ease) infinite alternate;
+}
+@keyframes scan-sweep { from { background-position: 0 100%; } to { background-position: 0 0; } }
+
+/* Pasos reales: filtro de calidad (nitidez, luz, hoja) y modelo. */
+.scan-steps { display: flex; flex-direction: column; gap: 8px; margin: 2px 0 0; padding: 0; list-style: none; }
+.step { display: grid; grid-template-columns: 16px 1fr; column-gap: 9px; align-items: center; font-size: 0.86rem; line-height: 1.2; }
+.step::before {
+  content: "";
+  grid-row: 1 / span 2;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(185 212 194 / 0.45);
+}
+.step-name { font-weight: 600; }
+.step-value { grid-column: 2; font-family: var(--mono); font-size: 0.72rem; color: var(--on-forest-muted); }
+.step-value:empty::before { content: "\00a0"; }
+.step[data-state="pending"] { color: rgb(185 212 194 / 0.6); }
+.step[data-state="active"]::before { background: var(--mint); box-shadow: 0 0 0 4px rgb(212 236 217 / 0.18); animation: status-pulse 0.7s var(--ease) infinite alternate; }
+.step[data-state="done"]::before {
+  box-shadow: none;
+  background: var(--mint) center / 11px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23133f27' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+.step[data-state="fail"] { color: #f2c14e; }
+.step[data-state="fail"] .step-value { color: #f2c14e; }
+.step[data-state="fail"]::before {
+  box-shadow: none;
+  background: #f2c14e center / 10px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e4300' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");
+}
+
+.scan .result-head { margin: 16px 0 12px; padding: 12px 14px; border-radius: var(--radius-inner); }
+.scan-title { margin: 16px 0 4px; font-size: 1.35rem; }
+.scan .message { margin: 10px 0 0; color: var(--ink); }
+.scan-say { margin: 10px 0 0; font-weight: 600; }
+.scan-label { margin: 16px 0 8px; color: var(--on-forest-muted); font-size: 0.78rem; font-weight: 600; }
+.scan-meta {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgb(185 212 194 / 0.18);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--on-forest-muted);
+}
+
+/* Medidor de confianza: la zona rayada es donde la app diría "No estoy seguro". */
+.meter-head { display: flex; justify-content: space-between; align-items: baseline; color: var(--on-forest-muted); font-size: 0.85rem; font-weight: 600; }
+.meter-head strong { font-family: var(--mono); font-size: 1.7rem; font-weight: 600; color: var(--on-forest); letter-spacing: -0.02em; }
+.meter-head .unit { margin-left: 2px; font-family: var(--sans); font-size: 0.6em; font-weight: 600; }
+.meter-track {
+  position: relative;
+  height: 12px;
+  margin: 8px 0 6px;
+  border-radius: var(--pill);
+  background:
+    repeating-linear-gradient(135deg, rgb(242 193 78 / 0.38) 0 3px, transparent 3px 7px) left center / calc(var(--threshold) * 100%) 100% no-repeat,
+    rgb(255 255 255 / 0.12);
+}
+.meter-fill { height: 100%; border-radius: inherit; background: var(--mint); transform-origin: left; }
+.meter.below .meter-fill { background: #f2c14e; }
+.meter.below .meter-head strong { color: #f2c14e; }
+.meter-threshold { position: absolute; top: -5px; bottom: -5px; left: calc(var(--threshold) * 100%); width: 2px; margin-left: -1px; background: #fff; border-radius: 2px; }
+.meter-note { margin: 4px 0 0; color: var(--on-forest-muted); font-size: 0.76rem; }
+
+/* Otras clases que el modelo consideró. */
+.alternatives { display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.alt { display: grid; grid-template-columns: 6.8em 1fr 3.2em; gap: 10px; align-items: center; font-size: 0.86rem; }
+.alt-bar { height: 6px; border-radius: var(--pill); background: rgb(255 255 255 / 0.1); overflow: hidden; }
+.alt-fill { display: block; height: 100%; border-radius: inherit; background: var(--tone); background: color-mix(in srgb, var(--tone) 70%, #fff); transform-origin: left; }
+.alt-pct { font-family: var(--mono); font-size: 0.78rem; text-align: right; color: var(--on-forest-muted); }
+
+/* Entrada solo en el repintado que sigue a una foto (clase .fresh), nunca al navegar. */
+@media (prefers-reduced-motion: no-preference) {
+  .scan.fresh .result-head { animation: rise 0.35s var(--ease) both; }
+  .scan.fresh .meter-fill,
+  .scan.fresh .alt-fill { animation: grow 0.7s var(--ease) both; }
+  .scan.fresh .alt:nth-child(2) .alt-fill { animation-delay: 0.08s; }
+  .scan.fresh .alt:nth-child(3) .alt-fill { animation-delay: 0.16s; }
+  .sample-map.fresh .leaf.latest { animation: leaf-pop 0.5s var(--ease) both; }
+}
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes leaf-pop { 0% { transform: scale(0.3); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+/* ---------- Enviar: lo que significa cada pieza del código ---------- */
+
+.code-parts { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: 0 0 12px; }
+.code-part { padding: 8px 10px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-inner); }
+.code-part dt { font-family: var(--mono); font-size: 0.95rem; font-weight: 600; color: var(--forest); }
+.code-part dd { margin: 2px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.25; }
+
+/* ---------- Técnico: gravedad junto al porcentaje ---------- */
+
+.sev { display: inline-block; width: 54px; height: 6px; margin-left: 10px; vertical-align: middle; background: var(--paper); border-radius: var(--pill); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+.sev-fill { display: block; height: 100%; background: var(--tone-roya); border-radius: inherit; }
+
+/* ---------- Pantallas anchas ---------- */
+
+@media (min-width: 700px) {
+  #app { box-shadow: 0 0 0 1px var(--line), 0 10px 40px rgb(19 63 39 / 0.1); }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  *,
+  *::before,
+  *::after { transition: none !important; animation: none !important; }
 }

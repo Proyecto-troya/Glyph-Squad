@@ -10,6 +10,7 @@ import {
   softmax,
   TARGET_LEAVES,
   tooManyUnsure,
+  topClasses,
 } from "../../app/src/domain/sample";
 
 const leaf = (label: LeafResult["label"], quality: LeafResult["quality"] = "ok"): LeafResult => ({
@@ -59,5 +60,13 @@ describe("abstención", () => {
   it("responde duda por debajo del umbral", () => {
     expect(decideLabel([0.1, 0.8, 0.05, 0.03, 0.02], 0.7).label).toBe("roya");
     expect(decideLabel([0.3, 0.4, 0.1, 0.1, 0.1], 0.7)).toEqual({ label: "duda", confidence: 0.4 });
+  });
+
+  it("ordena las clases que el modelo consideró", () => {
+    expect(topClasses([0.1, 0.6, 0.05, 0.22, 0.03])).toEqual([
+      { label: "roya", p: 0.6 },
+      { label: "cercospora", p: 0.22 },
+      { label: "sana", p: 0.1 },
+    ]);
   });
 });

@@ -35,12 +35,14 @@ export function renderTecnico(root: HTMLElement, app: App): void {
         );
         if (c.duda > 0) detail.push(`${app.t("unsureShort")} ${c.duda}`);
         const flags = [row.over15 && app.t("flagOld"), row.flagUnsure && app.t("flagUnsure")].filter(Boolean);
+        const severity = el("span", { class: "sev-fill" });
+        severity.style.width = `${row.sickPct}%`;
         table.append(
           el(
             "tr",
             {},
             el("td", {}, row.plot),
-            el("td", {}, el("span", { class: "pill" }, `${Math.round(row.sickPct)} %`)),
+            el("td", {}, el("span", { class: "pill" }, `${Math.round(row.sickPct)} %`), el("span", { class: "sev" }, severity)),
             el("td", {}, String(c.total)),
             el("td", {}, detail.join(", ") || app.t("noSick")),
             el("td", {}, ...flags.map((flag) => el("span", { class: "chip" }, flag as string))),

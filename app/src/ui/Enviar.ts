@@ -1,9 +1,9 @@
 import { requestSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
 import { storage } from "../adapters/storage";
 import { countLeaves } from "../domain/sample";
-import { buildSmsRequest, composeSms } from "../domain/sms";
-import { App } from "./app";
-import { el, emptyState, messageCard } from "./dom";
+import { buildSmsRequest, CodePart, codeParts, composeSms } from "../domain/sms";
+import { App, forgetLast } from "./app";
+import { el, emptyState, LABEL_KEYS, messageCard } from "./dom";
 import { icon } from "./icons";
 
 export function renderEnviar(root: HTMLElement, app: App): void {
@@ -78,7 +78,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
   const restart = el("button", { type: "button" }, icon("plus"), app.t("restart"));
   restart.onclick = async () => {
     await storage.archive(sample);
-    app.last = null;
+    forgetLast(app);
     app.sentence = null;
     app.update(null);
     app.go("muestra");
@@ -89,9 +89,12 @@ export function renderEnviar(root: HTMLElement, app: App): void {
   const sendButton = el("button", { class: "primary big", type: "button" }, icon("send"), app.t("sendToTech"));
   sendButton.onclick = async () => {
     sendButton.disabled = true;
+    delete sendStatus.dataset.state;
     sendStatus.textContent = app.t("sending");
     const status = await sendSms(app.serviceUrl, code, sms === code ? null : sms.slice(code.length + 1));
     sendButton.disabled = status === "queued";
+    // El punto de .status late solo mientras se envía; al terminar queda fijo o, si no salió, en aviso.
+    sendStatus.dataset.state = status === "queued" ? "done" : "fail";
     sendStatus.textContent = app.t(
       status === "queued" ? "sendQueued" : status === "simulated" ? "sendSimulated" : "sendFailed",
     );
@@ -105,6 +108,7 @@ export function renderEnviar(root: HTMLElement, app: App): void {
       { class: "card" },
       el("h2", {}, app.t("yourMessage")),
       codeBox,
+      codeMeaning(code, app),
       sentenceBox,
       sentenceLabel,
       el("p", { class: "hint" }, app.t("privacyHint")),
@@ -126,4 +130,29 @@ export function renderEnviar(root: HTMLElement, app: App): void {
       ),
     );
   }
+}
+
+/** Lo que significa cada pieza del código, para que ella sepa qué envía y el técnico lo lea sin manual. */
+function codeMeaning(code: string, app: App): HTMLElement {
+  const meaning = (part: CodePart): string => {
+    switch (part.kind) {
+      case "app":
+        return "Leaf Plate";
+      case "plot":
+        return app.t("partPlot");
+      case "total":
+        return app.t("partLeaves");
+      case "over15":
+        return app.t("partOld");
+      case "count":
+        return part.label === "duda"
+          ? app.t("partUnsure", { n: part.n })
+          : app.t("partCount", { n: part.n, name: app.t(LABEL_KEYS[part.label]).toLowerCase() });
+    }
+  };
+  return el(
+    "dl",
+    { class: "code-parts" },
+    ...codeParts(code).map((part) => el("div", { class: "code-part" }, el("dt", {}, part.text), el("dd", {}, meaning(part)))),
+  );
 }

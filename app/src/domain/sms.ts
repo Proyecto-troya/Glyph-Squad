@@ -61,6 +61,24 @@ export function decodeSms(text: string): SmsPayload | null {
   return { plot, counts, over15 };
 }
 
+/** Una pieza del código y lo que significa, para explicarlo junto al SMS. */
+export type CodePart =
+  | { text: string; kind: "app" | "plot" | "total" | "over15" }
+  /** La clase contada y cuántas hojas. */
+  | { text: string; kind: "count"; label: (typeof TOKENS)[number][1]; n: number };
+
+/** Separa un código armado por `encodeSms` en sus piezas, en orden. */
+export function codeParts(code: string): CodePart[] {
+  return code.split(" ").map((text, i): CodePart => {
+    if (i === 0) return { text, kind: "app" };
+    if (i === 1) return { text, kind: "plot" };
+    if (i === 2) return { text, kind: "total" };
+    if (text === "E15+") return { text, kind: "over15" };
+    const [token, label] = TOKENS.find(([name]) => text.startsWith(name))!;
+    return { text, kind: "count", label, n: Number(text.slice(token.length)) };
+  });
+}
+
 /** Lo que recibe el servicio LLM (POST /api/sms): solo lo que ya va en el código. */
 export interface SmsRequest {
   plot: string;

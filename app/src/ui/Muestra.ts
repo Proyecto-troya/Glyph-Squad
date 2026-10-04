@@ -1,17 +1,18 @@
 import { fileToPixels } from "../adapters/image";
-import { checkQuality } from "../adapters/photoQuality";
-import { photoRejected } from "../domain/message";
+import { checkQuality, QualityReport } from "../adapters/photoQuality";
 import {
   addLeaf,
+  ClassProb,
   LeafResult,
   newSample,
   normalizePlot,
   removeLastLeaf,
   TARGET_LEAVES,
 } from "../domain/sample";
-import { App } from "./app";
-import { el, LABEL_KEYS, messageCard } from "./dom";
+import { App, forgetLast } from "./app";
+import { el, sampleMap } from "./dom";
 import { icon } from "./icons";
+import { scanClassifying, scanResult, scanWorking } from "./scan";
 
 export function renderMuestra(root: HTMLElement, app: App): void {
   if (!app.sample) {
@@ -23,37 +24,51 @@ export function renderMuestra(root: HTMLElement, app: App): void {
 
   const input = el("input", { type: "file", accept: "image/*", hidden: true });
   input.setAttribute("capture", "environment");
-  const status = el("p", { class: "status" });
   const shoot = el("button", { class: "primary big", type: "button", disabled: done }, icon("camera"), app.t("shoot"));
   shoot.onclick = () => input.click();
+  // El visor: la foto en análisis o, al terminar, la última foto con su resultado.
+  const scanSlot = el("div", { class: "scan-slot" });
+  if (app.last) scanSlot.append(scanResult(app, app.last));
 
   input.onchange = async () => {
     const file = input.files?.[0];
     if (!file) return;
     shoot.disabled = true;
-    status.textContent = app.t("looking");
+    forgetLast(app);
+    const photoUrl = URL.createObjectURL(file);
+    const card = scanWorking(app, photoUrl);
+    scanSlot.replaceChildren(card);
     const started = performance.now();
+    let quality: QualityReport | null = null;
     try {
       const pixels = await fileToPixels(file);
-      const report = checkQuality(pixels);
+      quality = checkQuality(pixels);
       let leaf: LeafResult;
-      if (report.quality === "repetir") {
+      let alternatives: ClassProb[] = [];
+      if (quality.quality === "repetir") {
         leaf = { label: "duda", confidence: 0, quality: "repetir" };
       } else {
-        leaf = { ...(await app.classifier.classify(pixels)), quality: "ok" };
+        scanClassifying(card, app, quality);
+        await painted();
+        const prediction = await app.classifier.classify(pixels);
+        leaf = { label: prediction.label, confidence: prediction.confidence, quality: "ok" };
+        alternatives = prediction.alternatives;
       }
-      app.last = { leaf, reason: report.reason, seconds: (performance.now() - started) / 1000 };
+      const seconds = (performance.now() - started) / 1000;
+      app.last = { leaf, reason: quality.reason, seconds, photoUrl, quality, alternatives };
+      app.fresh = true;
       app.update(addLeaf(sample, leaf));
     } catch (error) {
       console.error(error);
-      app.last = { leaf: { label: "duda", confidence: 0, quality: "repetir" }, seconds: 0 };
+      const leaf: LeafResult = { label: "duda", confidence: 0, quality: "repetir" };
+      app.last = { leaf, seconds: 0, photoUrl, quality, alternatives: [] };
       app.render();
     }
   };
 
   const undo = el("button", { type: "button", disabled: sample.leaves.length === 0 }, icon("undo"), app.t("undo"));
   undo.onclick = () => {
-    app.last = null;
+    forgetLast(app);
     app.update(removeLastLeaf(sample));
   };
   const next = el(
@@ -64,51 +79,34 @@ export function renderMuestra(root: HTMLElement, app: App): void {
   );
   next.onclick = () => app.go("resultado");
 
-  const fill = el("div", { class: "progress-fill" });
-  fill.style.width = `${Math.min(100, (sample.leaves.length / TARGET_LEAVES) * 100)}%`;
-
   root.append(
     el("h1", {}, app.t("plotTitle", { plot: sample.plot })),
     el(
       "section",
       { class: "card" },
       el("p", { class: "counter" }, el("strong", {}, String(sample.leaves.length)), app.t("counter", { total: TARGET_LEAVES })),
-      el("div", { class: "progress" }, fill),
+      sampleMap(sample.leaves, app),
       done
         ? el("p", { class: "done" }, icon("check"), app.t("sampleDone"))
         : el("p", { class: "hint" }, app.t("sampleHint")),
     ),
     shoot,
     input,
-    status,
-    lastPhoto(app) ?? "",
+    scanSlot,
     el("div", { class: "row" }, undo, next),
   );
 }
 
-function lastPhoto(app: App): HTMLElement | null {
-  if (!app.last) return null;
-  const { leaf, seconds } = app.last;
-  if (leaf.quality === "repetir") {
-    return el("div", { class: "card warn" }, el("h2", {}, app.t("retake")), messageCard(photoRejected(), app));
-  }
-  const unsure = leaf.label === "duda";
-  return el(
-    "div",
-    { class: unsure ? "card warn" : "card" },
-    el(
-      "div",
-      { class: `result-head tone-${leaf.label}` },
-      el("span", { class: "dot" }),
-      el("h2", {}, app.t(LABEL_KEYS[leaf.label])),
-    ),
-    el(
-      "p",
-      {},
-      unsure ? app.t("unsureExplain") : app.t("confidence", { pct: Math.round(leaf.confidence * 100) }),
-    ),
-    el("p", { class: "hint" }, `${seconds.toFixed(1)} s`),
-  );
+/** Deja que el navegador pinte el paso antes de que el modelo ocupe el hilo. */
+function painted(): Promise<void> {
+  return new Promise((resolve) => {
+    // Con la pestaña en segundo plano no hay cuadro que esperar: se sigue igual.
+    const fallback = setTimeout(resolve, 100);
+    requestAnimationFrame(() => {
+      clearTimeout(fallback);
+      setTimeout(resolve);
+    });
+  });
 }
 
 function renderPlotForm(root: HTMLElement, app: App): void {
@@ -146,7 +144,7 @@ function renderPlotForm(root: HTMLElement, app: App): void {
       error.textContent = app.t("plotError");
       return;
     }
-    app.last = null;
+    forgetLast(app);
     app.update(newSample(plot));
   };
   root.append(form);

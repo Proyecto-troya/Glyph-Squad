@@ -1,8 +1,8 @@
 import { Classifier } from "../adapters/classifier";
-import { RejectReason } from "../adapters/photoQuality";
+import { QualityReport, RejectReason } from "../adapters/photoQuality";
 import { TextKey } from "../domain/i18n";
 import { Lang, MessageCatalog } from "../domain/message";
-import { LeafResult, Sample } from "../domain/sample";
+import { ClassProb, LeafResult, Sample } from "../domain/sample";
 
 export type Route = "muestra" | "resultado" | "enviar" | "tecnico";
 
@@ -10,11 +10,19 @@ export interface LastPhoto {
   leaf: LeafResult;
   reason?: RejectReason;
   seconds: number;
+  /** La foto como `blob:`, solo en memoria: no se guarda ni sale del teléfono. */
+  photoUrl: string;
+  /** Medidas del filtro de calidad; null si la foto no se pudo leer. */
+  quality: QualityReport | null;
+  /** Las clases más probables según el modelo; vacío si no se llegó a clasificar. */
+  alternatives: ClassProb[];
 }
 
 export interface App {
   sample: Sample | null;
   last: LastPhoto | null;
+  /** Solo en el repintado que sigue a una foto: anima la entrada del resultado y de la hoja nueva. */
+  fresh: boolean;
   techNumber: string;
   /** Dirección del servidor de la laptop; vacío = el mismo servidor que sirve la app. */
   serviceUrl: string;
@@ -33,4 +41,10 @@ export interface App {
   update(sample: Sample | null): void;
   go(route: Route): void;
   render(): void;
+}
+
+/** Olvida la última foto y libera su `blob:`. */
+export function forgetLast(app: App): void {
+  if (app.last) URL.revokeObjectURL(app.last.photoUrl);
+  app.last = null;
 }

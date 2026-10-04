@@ -24,7 +24,7 @@ function currentRoute(): Route {
   return route in ROUTES ? (route as Route) : "muestra";
 }
 
-/** Botón de idioma de la barra superior: un toque por idioma, con el actual marcado. */
+/** Botón de idioma, bajo la barra superior: un toque por idioma, con el actual marcado. */
 function languageSwitch(app: App): HTMLElement {
   const group = el("div", { class: "lang-switch" });
   group.setAttribute("role", "group");
@@ -53,6 +53,7 @@ async function start(): Promise<void> {
   const app: App = {
     sample,
     last: null,
+    fresh: false,
     techNumber,
     serviceUrl,
     sentence: null,
@@ -83,13 +84,18 @@ async function start(): Promise<void> {
       else if (route === "resultado") renderResultado(main, app);
       else if (route === "enviar") renderEnviar(main, app);
       else renderTecnico(main, app);
+      // La entrada del resultado solo se anima en el repintado que sigue a una foto.
+      app.fresh = false;
 
       const header = el(
         "header",
         { class: "appbar" },
         el("span", { class: "brand" }, el("span", { class: "brand-mark" }, icon("leaf")), "Leaf Plate"),
-        languageSwitch(app),
+        // Con el clasificador de mentira ya avisa la franja de demostración.
+        classifier.kind === "onnx" && el("span", { class: "ai-status" }, el("span", { class: "ai-dot" }), app.t("aiLocal")),
       );
+      // En su propia fila: en la barra, junto a la marca y al indicador de IA, no cabe a ancho de teléfono.
+      const langRow = el("div", { class: "lang-row" }, languageSwitch(app));
       const nav = el("nav", {});
       for (const [key, tab] of Object.entries(ROUTES)) {
         const link = el("a", { href: `#/${key}`, class: key === route ? "active" : "" }, icon(tab.icon), app.t(tab.name));
@@ -101,7 +107,7 @@ async function start(): Promise<void> {
       // El quechua de la interfaz no lo ha revisado nadie que lo hable: se avisa siempre.
       if (app.lang === "quz") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("quzNotice")));
       if (classifier.kind === "fake") banners.push(el("p", { class: "banner" }, icon("alert"), app.t("demoBanner")));
-      root.replaceChildren(header, ...banners, main, nav);
+      root.replaceChildren(header, langRow, ...banners, main, nav);
     },
   };
 

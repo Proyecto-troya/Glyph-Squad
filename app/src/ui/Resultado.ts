@@ -1,7 +1,7 @@
 import { chooseMessages } from "../domain/message";
-import { countLeaves, LEAF_LABELS } from "../domain/sample";
+import { countLeaves, LEAF_LABELS, sickCount, sickPct } from "../domain/sample";
 import { App } from "./app";
-import { el, emptyState, LABEL_KEYS, messageCard } from "./dom";
+import { el, emptyState, LABEL_KEYS, messageCard, sampleMap } from "./dom";
 import { icon } from "./icons";
 
 export function renderResultado(root: HTMLElement, app: App): void {
@@ -12,7 +12,17 @@ export function renderResultado(root: HTMLElement, app: App): void {
   }
   const counts = countLeaves(sample.leaves);
 
-  const table = el("section", { class: "card counts" });
+  const table = el(
+    "section",
+    { class: "card counts" },
+    sampleMap(sample.leaves, app, false),
+    el(
+      "p",
+      { class: "summary" },
+      el("strong", {}, app.t("summaryCount", { sick: sickCount(counts), total: counts.total })),
+      ` ${app.t("summaryRest", { pct: Math.round(sickPct(counts)) })}`,
+    ),
+  );
   for (const label of [...LEAF_LABELS, "duda"] as const) {
     if (counts[label] === 0) continue;
     const fill = el("div", { class: "bar-fill" });

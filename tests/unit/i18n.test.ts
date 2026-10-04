@@ -25,7 +25,7 @@ describe("textos de la interfaz", () => {
   it("rellena los huecos", () => {
     expect(translate("es", "plotTitle", { plot: "P114" })).toBe("Parcela P114");
     expect(translate("en", "counter", { total: 30 })).toBe("of 30 leaves");
-    expect(translate("quz", "confidence", { pct: 91 })).toContain("91 %");
+    expect(translate("quz", "leafArea", { pct: 34 })).toContain("34 %");
   });
 
   it("el aviso del quechua lleva también el español", () => {
