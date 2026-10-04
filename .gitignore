@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# macOS / exFAT metadata
+._*
+.DS_Store
+
+# gateway local env
+gateway/.env
