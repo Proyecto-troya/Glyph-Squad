@@ -40,10 +40,29 @@ python ml/tts_quechua.py    # ~40 clips Opus (necesita ffmpeg) -> app/public/aud
 
 Los datasets se descargan a `ml/data/` (no se suben al repo). Ver [DATOS.md](DATOS.md).
 
+## Servidor (`api/`, Vercel)
+
+Producción: https://leaf-plate-kappa.vercel.app (se despliega con `npx vercel deploy --prod`).
+
+- `POST /api/send` envía el SMS al técnico. El número lo fija el servidor (`TECH_NUMBER`, con
+  formato `+50370000000`) y solo acepta un código `LP` válido. Quién lo envía depende de las
+  variables de entorno del proyecto en Vercel:
+  - `SMS_GATEWAY_USER` y `SMS_GATEWAY_PASSWORD`: un Android con la app
+    [SMS Gateway for Android](https://github.com/capcom6/android-sms-gateway) en modo Cloud
+    Server; el SMS sale por su SIM.
+  - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_FROM`: Twilio.
+  - Ninguna: responde `simulated` y no envía nada.
+- `POST /api/sms` devuelve la frase para el técnico: plantilla fija, o un LLM si `OLLAMA_URL`
+  apunta a un servidor Ollama alcanzable.
+
+Enviar por el servidor necesita internet en el teléfono. El botón "Abrir SMS" usa la SIM del
+propio teléfono y es el único camino que funciona sin datos.
+
 ## Estado
 
-Hecho y probado: lógica de dominio (31 pruebas), build y service worker, 4 pantallas.
-La app con modelo y sin audio pesa 19,5 MB (13,7 MB son el WASM de onnxruntime-web).
+Hecho y probado: lógica de dominio (31 pruebas), build, 4 pantallas y, en Chrome sobre el
+despliegue, el modelo real y los 78 clips de audio. La app con modelo y audio pesa 20,1 MB
+(meta: 20 MB; 13,7 MB son el WASM de onnxruntime-web).
 
 Modelo entrenado en CPU con 1.401 de las 1.747 hojas de BRACOL (el zip publicado en
 Mendeley está cortado). La cuantización int8 lo hunde (13–27 % en validación), así que la
@@ -63,5 +82,7 @@ tal como está no sirve para la decisión de Noor.
 La frase del LLM en el SMS está preparada pero apagada (`SMS_SERVICE_ENABLED` en
 `app/src/adapters/smsService.ts`): el SMS lleva solo el código.
 
-Sin hacer todavía: clips de audio, modelo ONNX probado en un navegador real, prueba en
-Android con datos apagados, SMS recibido, conjunto dorado con fotos propias.
+Sin hacer todavía: modo sin conexión comprobado (en la laptop de desarrollo Chrome no logra
+guardar el WASM de 14 MB; falta probarlo en el Android), un SMS realmente enviado y recibido
+(el servidor no tiene credenciales de SMS), pronunciación del quechua revisada por alguien que
+lo hable y conjunto dorado con fotos propias.

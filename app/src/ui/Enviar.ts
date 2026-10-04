@@ -93,10 +93,10 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     sendButton.disabled = true;
     sendStatus.textContent = "Enviando…";
     const status = await sendSms(app.serviceUrl, code, sms === code ? null : sms.slice(code.length + 1));
-    sendButton.disabled = status === "sent";
+    sendButton.disabled = status === "queued";
     sendStatus.textContent =
-      status === "sent"
-        ? "Mensaje enviado al técnico."
+      status === "queued"
+        ? "Mensaje en camino al técnico."
         : status === "simulated"
           ? "Demostración: el servidor recibió el mensaje, pero no tiene servicio de SMS y no envió nada."
           : "No se pudo enviar por el servidor. Usa el botón de SMS del teléfono.";

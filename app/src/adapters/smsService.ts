@@ -42,7 +42,7 @@ export async function requestSentence(
 export const SMS_SEND_ENABLED: boolean = true;
 
 /** "simulated": el servidor no tiene proveedor de SMS configurado y no envió nada (modo demo). */
-export type SendStatus = "sent" | "simulated";
+export type SendStatus = "queued" | "simulated";
 
 /** Devuelve null si el servidor no responde o rechaza el mensaje. */
 export async function sendSms(baseUrl: string, code: string, text: string | null): Promise<SendStatus | null> {
@@ -55,7 +55,7 @@ export async function sendSms(baseUrl: string, code: string, text: string | null
     });
     if (!response.ok) return null;
     const status = ((await response.json()) as { status?: string }).status;
-    return status === "sent" || status === "simulated" ? status : null;
+    return status === "queued" || status === "simulated" ? status : null;
   } catch {
     return null;
   }
