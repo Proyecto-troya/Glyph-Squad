@@ -547,6 +547,9 @@ label:has(+ .error:not(:empty)) input { border-color: var(--danger); }
 .sentence:empty { display: none; }
 
 a.button { width: 100%; }
+/* "Abrir SMS para el técnico" es el texto más largo de un botón grande: un poco menos de letra
+   y de margen para que quepa en una línea desde 360 px. */
+a.button.big { gap: 8px; padding-inline: 14px; font-size: 1.08rem; white-space: nowrap; }
 
 details {
   margin: 20px 0;
