@@ -53,7 +53,11 @@ export async function sendSms(baseUrl: string, code: string, text: string | null
       body: JSON.stringify(text ? { code, text } : { code }),
       signal: AbortSignal.timeout(SMS_SERVICE_TIMEOUT_MS),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // Para quien depura: el motivo (credenciales, número, proveedor) va en la respuesta.
+      console.warn("El servidor no envió el SMS:", await response.text());
+      return null;
+    }
     const status = ((await response.json()) as { status?: string }).status;
     return status === "queued" || status === "simulated" ? status : null;
   } catch {

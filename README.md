@@ -46,14 +46,21 @@ Producción: https://leaf-plate-kappa.vercel.app (se despliega con `npx vercel d
 
 - `POST /api/send` envía el SMS al técnico. El número lo fija el servidor (`TECH_NUMBER`, con
   formato `+50370000000`) y solo acepta un código `LP` válido. Quién lo envía depende de las
-  variables de entorno del proyecto en Vercel:
+  variables de entorno:
+  - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_FROM` (número `+1...` o Messaging Service `MG...`) y,
+    para autenticarse, `TWILIO_AUTH_TOKEN` o bien `TWILIO_API_KEY` + `TWILIO_API_SECRET`.
   - `SMS_GATEWAY_USER` y `SMS_GATEWAY_PASSWORD`: un Android con la app
     [SMS Gateway for Android](https://github.com/capcom6/android-sms-gateway) en modo Cloud
     Server; el SMS sale por su SIM.
-  - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_FROM`: Twilio.
   - Ninguna: responde `simulated` y no envía nada.
 - `POST /api/sms` devuelve la frase para el técnico: plantilla fija, o un LLM si `OLLAMA_URL`
   apunta a un servidor Ollama alcanzable.
+
+Los secretos van en `.env`, en la raíz del proyecto, que no se sube a git. `npm run dev` y
+`npm run preview` atienden `/api/*` con ese archivo. `npm run secrets:check` pregunta a Twilio
+si acepta las credenciales, sin enviar nada; `npm run secrets:push` copia los valores al
+proyecto de Vercel sin mostrarlos, y después hay que volver a desplegar.
+`GET /api/send` dice si hay un proveedor configurado.
 
 Enviar por el servidor necesita internet en el teléfono. El botón "Abrir SMS" usa la SIM del
 propio teléfono y es el único camino que funciona sin datos.
