@@ -34,8 +34,8 @@ connection, the same plot code and counts, which go to the service that writes t
 
 The only AI on the phone is the vision classifier (5 classes plus abstention). The counting,
 the messages, the SMS code, the photo quality filter and the technician's list are all rules.
-When the team's laptop is reachable, a small language model on it adds one more message for
-the technician.
+A small language model adds one more message for the technician: the one on the team's laptop
+when it is reachable, otherwise a hosted one that the deployed site's server calls.
 
 <p align="center">
   <img src="docs/screens/muestra-es.jpg" alt="First screen in Spanish: enter the plot code and start a sample of 30 leaves" width="250">
@@ -141,10 +141,13 @@ rules, on the phone and with no network. When the team's laptop is reachable, a 
 message written by its language model goes under it (`SMS_SERVICE_ENABLED` in
 `app/src/adapters/smsService.ts`). The app asks `POST /api/sms`; the laptop gateway described
 below (`gateway/`) has the model write one sentence and validates it against the counts. The
-model runs on the laptop, never on the phone. The app shows that message only when the model
-wrote it, in its own box labelled as written by AI. With no laptop, the SMS carries the code
-and the fixed sentence. With both sentences the SMS is longer than 160 characters and travels
-as two parts.
+model runs on the laptop, never on the phone. On the deployed site, when no laptop answers,
+the server asks a small hosted model instead (`meta/llama-3.1-8b` through Vercel AI Gateway)
+and validates its sentence the same way. Only the plot code and the counts are sent to it,
+and `AI_GATEWAY_MODEL=off` switches it off. The app shows the message only when a model wrote
+it, in its own box, labelled as written by AI on the laptop or on an internet server. When no
+model gives a valid sentence, the SMS carries the code and the fixed sentence. With both
+sentences the SMS is longer than 160 characters and travels as two parts.
 
 ## Results
 

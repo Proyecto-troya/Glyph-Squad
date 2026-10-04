@@ -20,6 +20,7 @@ const KNOWN = {
   OLLAMA_MODEL: /^\S+$/,
   GATEWAY_URL: /^https?:\/\/\S+$/,
   GATEWAY_TOKEN: /^\S+$/,
+  AI_GATEWAY_MODEL: /^\S+$/,
 };
 
 const args = process.argv.slice(2);

@@ -35,8 +35,9 @@ mensaje de la IA.
 
 La única IA en el teléfono es el clasificador de visión (5 clases + abstención). El conteo,
 los mensajes, el código SMS, el filtro de calidad de la foto y la lista del técnico son
-reglas. Cuando la laptop del equipo está al alcance, un modelo de lenguaje pequeño que corre
-en ella añade un mensaje más para el técnico.
+reglas. Un modelo de lenguaje pequeño añade un mensaje más para el técnico: el de la laptop
+del equipo cuando está al alcance y, si no, uno alojado al que llama el servidor del sitio
+desplegado.
 
 <p align="center">
   <img src="docs/screens/muestra-es.jpg" alt="Primera pantalla en español: escribir el código de parcela y empezar una muestra de 30 hojas" width="250">
@@ -146,10 +147,13 @@ conteos, en el teléfono y sin red. Cuando la laptop del equipo está al alcance
 segundo mensaje redactado por su modelo de lenguaje (`SMS_SERVICE_ENABLED` en
 `app/src/adapters/smsService.ts`). La app pregunta a `POST /api/sms`; el gateway de la laptop
 (`gateway/`) hace que el modelo redacte una frase y la valida contra los conteos. El modelo
-corre en la laptop, nunca en el teléfono. La app muestra ese mensaje solo cuando lo redactó
-el modelo, en su propio recuadro y rotulado como escrito por IA. Sin laptop, el SMS lleva el
-código y la frase fija. Con las dos frases el SMS pasa de 160 caracteres y viaja en dos
-partes.
+corre en la laptop, nunca en el teléfono. En el sitio desplegado, cuando ninguna laptop
+responde, el servidor pregunta a un modelo pequeño alojado (`meta/llama-3.1-8b`, por Vercel
+AI Gateway) y valida su frase igual. A ese modelo solo le llegan el código de parcela y los
+conteos, y `AI_GATEWAY_MODEL=off` lo apaga. La app muestra el mensaje solo cuando lo redactó
+un modelo, en su propio recuadro y rotulado como escrito por IA en la laptop o en un servidor
+de internet. Cuando ningún modelo da una frase válida, el SMS lleva el código y la frase
+fija. Con las dos frases el SMS pasa de 160 caracteres y viaja en dos partes.
 
 La app no tiene pantalla para la dirección de la laptop, porque no es cosa de la caficultora.
 Hay dos formas de conectarlas:
@@ -260,9 +264,10 @@ Producción: https://leaf-plate-kappa.vercel.app (se despliega con `npx vercel d
     Server; el SMS sale por su SIM.
   - Ninguna: responde `simulated` y no envía nada.
 - `POST /api/sms` devuelve una frase para el técnico. La redacta el modelo de la laptop si
-  `GATEWAY_URL` apunta a un gateway alcanzable, o un servidor Ollama en `OLLAMA_URL`; si no,
-  es la plantilla fija. La app la muestra como mensaje de la IA solo cuando la redactó un
-  modelo.
+  `GATEWAY_URL` apunta a un gateway alcanzable, o un servidor Ollama en `OLLAMA_URL`. En
+  Vercel, cuando ninguno responde, la redacta un modelo pequeño alojado por Vercel AI Gateway;
+  entra con la credencial del propio despliegue, sin clave que configurar. Si no, es la
+  plantilla fija. La app la muestra como mensaje de la IA solo cuando la redactó un modelo.
 
 Los secretos van en `.env`, en la raíz del proyecto, que no se sube a git. `npm run dev` y
 `npm run preview` atienden `/api/*` con ese archivo. `npm run secrets:check` pregunta a Twilio

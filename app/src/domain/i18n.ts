@@ -116,6 +116,7 @@ const es = {
   copyManually: "Cópialo a mano",
   restart: "Empezar otra parcela",
   sentenceAi: "Mensaje redactado por IA en la laptop. Léelo antes de enviar.",
+  sentenceAiCloud: "Mensaje redactado por IA en un servidor de internet. Léelo antes de enviar.",
   sentenceTemplate: "Frase de plantilla fija, no de IA. Léela antes de enviar.",
   sentenceAsking: "Pidiendo el mensaje de la IA…",
 
@@ -234,6 +235,7 @@ const en: Record<TextKey, string> = {
   copyManually: "Copy it by hand",
   restart: "Start another plot",
   sentenceAi: "Message written by AI on the laptop. Read it before sending.",
+  sentenceAiCloud: "Message written by AI on an internet server. Read it before sending.",
   sentenceTemplate: "Sentence from a fixed template, not AI. Read it before sending.",
   sentenceAsking: "Asking the AI for its message…",
 
@@ -354,6 +356,7 @@ const quz: Record<TextKey, string> = {
   copyManually: "Makiykiwan copiay",
   restart: "Huk parcelata qallariy",
   sentenceAi: "Kay rimaytaqa laptoppi IA qillqarqan. Manaraq apachichkaspa ñawinchay.",
+  sentenceAiCloud: "Kay rimaytaqa internetpi huk servidorpi IA qillqarqan. Manaraq apachichkaspa ñawinchay.",
   sentenceTemplate: "Kay rimayqa plantilla fijamantam, manam IAchu. Manaraq apachichkaspa ñawinchay.",
   sentenceAsking: "IAmanta rimayta mañakuchkani…",
 

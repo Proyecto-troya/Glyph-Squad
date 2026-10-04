@@ -83,23 +83,28 @@ describe("servicio de la frase (POST /api/sms)", () => {
 describe("mensaje de la IA", () => {
   it("sin laptop guardada pregunta solo al servidor que sirve la app", async () => {
     const fetchMock = stubFetch(llm);
-    expect(await requestAiSentence("", request)).toBe(SENTENCE);
+    expect(await requestAiSentence("", request)).toEqual({ text: SENTENCE, host: "laptop" });
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/api/sms"]);
   });
 
   it("con laptop guardada le pregunta a ella y no molesta al servidor", async () => {
     const fetchMock = stubFetch(llm);
-    expect(await requestAiSentence(LAPTOP, request)).toBe(SENTENCE);
+    expect(await requestAiSentence(LAPTOP, request)).toEqual({ text: SENTENCE, host: "laptop" });
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([`${LAPTOP}/api/sms`]);
   });
 
   it("si la laptop no da una frase del modelo, pregunta al servidor", async () => {
     let fetchMock = stubFetch((url) => (url.startsWith(LAPTOP) ? template() : llm()));
-    expect(await requestAiSentence(LAPTOP, request)).toBe(SENTENCE);
+    expect(await requestAiSentence(LAPTOP, request)).toEqual({ text: SENTENCE, host: "laptop" });
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([`${LAPTOP}/api/sms`, "/api/sms"]);
 
     fetchMock = stubFetch((url) => (url.startsWith(LAPTOP) ? Promise.reject(new TypeError("Failed to fetch")) : llm()));
-    expect(await requestAiSentence(LAPTOP, request)).toBe(SENTENCE);
+    expect(await requestAiSentence(LAPTOP, request)).toEqual({ text: SENTENCE, host: "laptop" });
+  });
+
+  it("recuerda si el servidor lo redactó con un modelo de internet", async () => {
+    stubFetch(() => json({ text: SENTENCE, source: "llm", host: "cloud" }));
+    expect(await requestAiSentence("", request)).toEqual({ text: SENTENCE, host: "cloud" });
   });
 
   it("la plantilla de un servidor no es un mensaje de la IA", async () => {

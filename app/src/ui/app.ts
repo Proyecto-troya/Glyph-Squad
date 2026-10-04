@@ -1,5 +1,6 @@
 import { Classifier } from "../adapters/classifier";
 import { QualityReport, RejectReason } from "../adapters/photoQuality";
+import { AiMessage } from "../adapters/smsService";
 import { TextKey } from "../domain/i18n";
 import { Lang, MessageCatalog } from "../domain/message";
 import { ClassProb, LeafResult, Sample } from "../domain/sample";
@@ -27,7 +28,7 @@ export interface App {
   /** Dirección de la laptop que redacta el mensaje de la IA (su gateway), guardada con el enlace de preparación; vacío = ninguna. */
   serviceUrl: string;
   /** Mensaje de la IA ya recibido para un código, para no pedirlo en cada repintado. */
-  sentence: { code: string; ai: string } | null;
+  sentence: { code: string; ai: AiMessage } | null;
   /** Códigos pegados en la lista del técnico: se conservan al cambiar de idioma o de vista. */
   techText: string;
   catalog: MessageCatalog;

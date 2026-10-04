@@ -1,4 +1,4 @@
-import { requestAiSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
+import { AiMessage, requestAiSentence, sendSms, SMS_SEND_ENABLED, SMS_SERVICE_ENABLED } from "../adapters/smsService";
 import { storage } from "../adapters/storage";
 import { countLeaves } from "../domain/sample";
 import { buildSmsRequest, CodePart, codeParts, composeSms, fixedSentence, smsSentences } from "../domain/sms";
@@ -31,28 +31,30 @@ export function renderEnviar(root: HTMLElement, app: App): void {
     link.href = `sms:${app.techNumber.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(sms)}`;
   };
 
-  const showAi = (text: string | null) => {
-    aiLine = smsSentences(code, text)[0] ?? null;
+  const showAi = (message: AiMessage | null) => {
+    aiLine = smsSentences(code, message?.text)[0] ?? null;
     // Lo que se ve es lo que se envía: el código, la frase fija y, si llegó, el mensaje de la IA.
     sms = composeSms(code, fixedLine, aiLine);
     aiBox.textContent = aiLine ?? "";
-    aiLabel.replaceChildren(...(aiLine ? [icon("local-ai"), app.t("sentenceAi")] : []));
+    // Se dice dónde corre el modelo que lo redactó: en la laptop o en un servidor de internet.
+    const label = app.t(message?.host === "cloud" ? "sentenceAiCloud" : "sentenceAi");
+    aiLabel.replaceChildren(...(aiLine ? [icon("local-ai"), label] : []));
     aiCard.hidden = !aiLine;
     setLink();
   };
 
   const askAi = async () => {
-    // El aviso de espera sale solo si la respuesta tarda: sin laptop, el servidor contesta enseguida que no hay.
+    // El aviso de espera sale solo si la respuesta tarda.
     const waiting = setTimeout(() => {
       aiLabel.textContent = app.t("sentenceAsking");
       aiCard.hidden = false;
     }, 400);
-    const text = await requestAiSentence(app.serviceUrl, request);
+    const message = await requestAiSentence(app.serviceUrl, request);
     clearTimeout(waiting);
     // Solo se recuerda el mensaje que llegó: si no hubo, se vuelve a pedir al volver a esta pantalla.
-    if (text) app.sentence = { code, ai: text };
+    if (message) app.sentence = { code, ai: message };
     // Si mientras tanto cambió la pantalla, estos nodos ya no están a la vista y no pasa nada.
-    showAi(text);
+    showAi(message);
   };
 
   setLink();

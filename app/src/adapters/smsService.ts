@@ -5,10 +5,21 @@
 
 import { SmsRequest } from "../domain/sms";
 
+/** Dónde corre el modelo: en la laptop del equipo o en un servidor de internet. */
+export type AiHost = "laptop" | "cloud";
+
 export interface SmsResponse {
   text: string;
   /** "llm": la redactó el modelo y pasó la validación del servidor. "fallback": plantilla fija. */
   source: "llm" | "fallback";
+  /** Lo dice el servidor que sirve la app; la laptop no lo dice porque su modelo corre en ella. */
+  host?: AiHost;
+}
+
+/** El mensaje de la IA y dónde se redactó, para rotularlo en pantalla. */
+export interface AiMessage {
+  text: string;
+  host: AiHost;
 }
 
 /** Encendido: Enviar pide el mensaje de la IA al abrirse. Apagado, la app no llama a nadie. */
@@ -58,7 +69,11 @@ export async function requestSentence(
     }
     const data = (await response.json()) as Partial<SmsResponse>;
     if (typeof data.text !== "string" || !data.text.trim()) return null;
-    return { text: data.text.trim(), source: data.source === "llm" ? "llm" : "fallback" };
+    return {
+      text: data.text.trim(),
+      source: data.source === "llm" ? "llm" : "fallback",
+      ...(data.host === "cloud" || data.host === "laptop" ? { host: data.host } : {}),
+    };
   } catch {
     return null;
   } finally {
@@ -71,10 +86,10 @@ export async function requestSentence(
  * guardada en el teléfono y, si no da una frase del modelo, al servidor que sirve la app.
  * Las plantillas de los servidores no cuentan: la frase fija ya la arma la app.
  */
-export async function requestAiSentence(laptopUrl: string, request: SmsRequest): Promise<string | null> {
+export async function requestAiSentence(laptopUrl: string, request: SmsRequest): Promise<AiMessage | null> {
   for (const baseUrl of laptopUrl ? [laptopUrl, ""] : [""]) {
     const response = await requestSentence(baseUrl, request);
-    if (response?.source === "llm") return response.text;
+    if (response?.source === "llm") return { text: response.text, host: response.host ?? "laptop" };
   }
   return null;
 }
