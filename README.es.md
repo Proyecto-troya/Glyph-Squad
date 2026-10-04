@@ -87,7 +87,7 @@ en esa semana.
 ## Cómo funciona
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Recoger 30 hojas<br>10 plantas, 3 ramas"] --> B["Una hoja por foto<br>sobre un plato blanco"]
     B --> C{"¿Foto nítida,<br>con luz, una hoja?"}
     C -- no --> B

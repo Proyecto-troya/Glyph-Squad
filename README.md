@@ -83,7 +83,7 @@ smartphone, which is only home at weekends. There is no Wi-Fi. Any tool has to f
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Pick 30 leaves<br>10 plants, 3 branches"] --> B["One leaf per photo<br>on a white plate"]
     B --> C{"Photo sharp,<br>lit, one leaf?"}
     C -- no --> B
